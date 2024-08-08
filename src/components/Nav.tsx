@@ -1,4 +1,6 @@
-import { useLocation } from '@solidjs/router';
+import { redirect, useLocation } from '@solidjs/router';
+import { getRequestEvent } from 'solid-js/web';
+import { deleteCookie } from 'vinxi/http';
 
 export default function Nav() {
 	const location = useLocation();
@@ -10,6 +12,17 @@ export default function Nav() {
 				<li class={`border-b-2 ${active('/')} mx-1.5 sm:mx-6`}>
 					<a href="/">Home</a>
 				</li>
+				<button
+					onClick={async () => {
+						'use server';
+
+						const event = getRequestEvent()!;
+						deleteCookie(event.nativeEvent, 'accessToken');
+						return redirect('/signin');
+					}}
+				>
+					Sign Out
+				</button>
 			</ul>
 		</nav>
 	);

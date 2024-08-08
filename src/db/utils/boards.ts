@@ -1,11 +1,19 @@
 import { cache } from '@solidjs/router';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { db } from '~/db';
 import { type TBoard, type TTask, boards, tasks } from '~/db/schema';
+import { getUser } from './users';
 
 const getBoards = cache(async () => {
 	'use server';
-	const rows = await db.select().from(boards).leftJoin(tasks, eq(boards.id, tasks.boardId));
+	const user = await getUser();
+	if (!user) return new Error('Unauthorized');
+
+	const rows = await db
+		.select()
+		.from(boards)
+		.where(eq(boards.userId, user.id))
+		.leftJoin(tasks, and(eq(boards.id, tasks.boardId)));
 
 	const $boards: (TBoard & { tasks: TTask[] })[] = [];
 
@@ -23,18 +31,22 @@ const getBoards = cache(async () => {
 
 const createBoard = async (board: Omit<TBoard, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
 	'use server';
+	const user = await getUser();
+	if (!user) return new Error('Unauthorized');
 
 	const $board = await db
 		.insert(boards)
-		.values({ ...board, userId: 1 })
+		.values({ ...board, userId: user.id })
 		.returning();
 	return $board;
 };
 
 const deleteBoard = async (boardId: TBoard['id']) => {
 	'use server';
+	const user = await getUser();
+	if (!user) return new Error('Unauthorized');
 
-	await db.delete(boards).where(eq(boards.id, boardId));
+	await db.delete(boards).where(and(eq(boards.id, boardId), eq(boards.userId, user.id)));
 };
 
 export { createBoard, deleteBoard, getBoards };

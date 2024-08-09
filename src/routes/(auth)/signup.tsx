@@ -1,6 +1,7 @@
-import { action, redirect } from '@solidjs/router';
+import { action, redirect, useSubmission } from '@solidjs/router';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { createEffect } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { setCookie } from 'vinxi/http';
 import { db } from '~/db';
@@ -15,7 +16,7 @@ const signUp = action(async (formData: FormData) => {
 
 	const [user] = await db.insert(users).values({ email, passwordHash }).returning();
 
-	if (!user) return new Error('Database Error');
+	if (!user) return new Error('Database Error', { cause: 'INTERNAL_SERVER_ERROR' });
 
 	const token = jwt.sign({ id: user.id }, process.env.AUTH_SECRET!, {
 		expiresIn: '3 days'
@@ -32,6 +33,22 @@ const signUp = action(async (formData: FormData) => {
 }, 'signup');
 
 export default function SignInPage() {
+	const submission = useSubmission(signUp);
+
+	createEffect(() => {
+		const result = submission.result;
+		if (!result) return;
+		if (result instanceof Error) {
+			switch (result.cause) {
+				case 'INTERNAL_SERVER_ERROR':
+					alert(result.message);
+					break;
+				default:
+					break;
+			}
+		}
+	});
+
 	return (
 		<div>
 			<form action={signUp} method="post" class="flex flex-col gap-2 p-4">

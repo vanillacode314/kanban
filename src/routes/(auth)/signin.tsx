@@ -1,7 +1,8 @@
-import { action, redirect } from '@solidjs/router';
+import { action, redirect, useSubmission } from '@solidjs/router';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
+import { createEffect } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { setCookie } from 'vinxi/http';
 import { db } from '~/db';
@@ -17,9 +18,10 @@ const signIn = action(async (formData: FormData) => {
 		.from(users)
 		.where(eq(users.email, email));
 
-	if (!user) return new Error('Invalid Credentials');
+	if (!user) return new Error('Email or password incorrect', { cause: 'INVALID_CREDENTIALS' });
 
-	if (!(await bcrypt.compare(password, user.passwordHash))) return new Error('Invalid Credentials');
+	if (!(await bcrypt.compare(password, user.passwordHash)))
+		return new Error('Email or password incorrect', { cause: 'INVALID_CREDENTIALS' });
 
 	const token = jwt.sign({ id: user.id }, process.env.AUTH_SECRET!, {
 		expiresIn: '3 days'
@@ -36,6 +38,22 @@ const signIn = action(async (formData: FormData) => {
 }, 'signin');
 
 export default function SignInPage() {
+	const submission = useSubmission(signIn);
+
+	createEffect(() => {
+		const result = submission.result;
+		if (!result) return;
+		if (result instanceof Error) {
+			switch (result.cause) {
+				case 'INVALID_CREDENTIALS':
+					alert(result.message);
+					break;
+				default:
+					break;
+			}
+		}
+	});
+
 	return (
 		<div>
 			<form action={signIn} method="post" class="flex flex-col gap-2 p-4">

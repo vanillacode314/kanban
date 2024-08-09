@@ -1,13 +1,10 @@
+import { action } from '@solidjs/router';
 import { and, eq } from 'drizzle-orm';
 import { db } from '~/db';
 import { type TBoard, type TTask, tasks } from '~/db/schema';
 import { getUser } from './users';
 
-const moveTask = async (
-	taskId: TTask['id'],
-	fromBoardId: TBoard['id'],
-	toBoardId: TBoard['id']
-) => {
+const moveTask = async (taskId: TTask['id'], toBoardId: TBoard['id']) => {
 	'use server';
 	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
@@ -18,24 +15,27 @@ const moveTask = async (
 		.where(and(eq(tasks.id, taskId), eq(tasks.userId, user.id)));
 };
 
-const createTask = async (task: Omit<TTask, 'id' | 'createdAt' | 'updatedAt' | 'userId'>) => {
+const createTask = action(async (formData: FormData) => {
 	'use server';
+
 	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
-	const $task = await db
-		.insert(tasks)
-		.values({ ...task, userId: user.id })
-		.returning();
+	const title = String(formData.get('title'));
+	const boardId = Number(formData.get('boardId'));
+
+	const $task = await db.insert(tasks).values({ title, boardId, userId: user.id }).returning();
 	return $task;
-};
+}, 'create-task');
 
-const deleteTask = async (taskId: TTask['id']) => {
+const deleteTask = action(async (formData: FormData) => {
 	'use server';
+
 	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
+	const taskId = Number(formData.get('id'));
 	await db.delete(tasks).where(and(eq(tasks.id, taskId), eq(tasks.userId, user.id)));
-};
+}, 'delete-task');
 
 export { createTask, deleteTask, moveTask };

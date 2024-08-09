@@ -1,4 +1,4 @@
-import { createAsync, revalidate } from '@solidjs/router';
+import { createAsync, revalidate, useSubmissions } from '@solidjs/router';
 import { Component, For } from 'solid-js';
 import type { TBoard, TTask } from '~/db/schema';
 import { createBoard, deleteBoard, getBoards } from '~/db/utils/boards';
@@ -9,21 +9,28 @@ export const route = {
 };
 
 export default function Home() {
-	const boards = createAsync(() => getBoards());
+	const serverBoards = createAsync(() => getBoards());
+	const submissions = useSubmissions(createBoard);
+
+	const pendingBoards = () =>
+		[...submissions.values()]
+			.filter((submission) => submission.pending)
+			.map((submission) => ({
+				title: submission.input[0].get('title') + ' (pending)'
+			}));
+
+	const boards = () => (serverBoards() ? [...serverBoards()!, ...pendingBoards()] : []);
 
 	return (
 		<div class="flex flex-col gap-4 p-4">
 			<div>
-				<button
-					class="flex items-center gap-1 rounded bg-neutral-700 px-4 py-2 text-sm font-semibold uppercase"
-					onClick={async () => {
-						await createBoard({ title: 'New Board' });
-						await revalidate(getBoards.key);
-					}}
-				>
-					<span class="i-heroicons:plus"></span>
-					<span>Create Board</span>
-				</button>
+				<form action={createBoard} method="post">
+					<input type="hidden" value="Test Board" name="title" />
+					<button class="flex items-center gap-1 rounded bg-neutral-700 px-4 py-2 text-sm font-semibold uppercase">
+						<span class="i-heroicons:plus"></span>
+						<span>Create Board</span>
+					</button>
+				</form>
 			</div>
 			<div class="grid h-full grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-4">
 				<For each={boards()}>{(board) => <Board board={board} />}</For>
@@ -39,25 +46,33 @@ const Task: Component<{ boardId: TBoard['id']; task: TTask }> = (props) => {
 			draggable="true"
 			onDragStart={(event) => {
 				if (!event.dataTransfer) throw new Error('No data transfer');
-				event.dataTransfer.setData('text/plain', `${props.boardId}:${props.task.id}`);
+				event.dataTransfer.setData('text/plain', String(props.task.id));
 			}}
 		>
 			<span>{props.task.title}</span>
-			<button
-				class="flex items-center gap-1 rounded bg-red-800 px-4 py-2 text-sm font-semibold uppercase"
-				onClick={async () => {
-					await deleteTask(props.task.id);
-					await revalidate(getBoards.key);
-				}}
-			>
-				<span class="i-heroicons:trash"></span>
-				<span>Delete</span>
-			</button>
+			<form action={deleteTask} method="post">
+				<input type="hidden" value={props.task.id} name="id" />
+				<button class="flex items-center gap-1 rounded bg-red-800 px-4 py-2 text-sm font-semibold uppercase">
+					<span class="i-heroicons:trash"></span>
+					<span>Delete</span>
+				</button>
+			</form>
 		</div>
 	);
 };
 
 const Board: Component<{ board: ReturnType<typeof getBoards> }> = (props) => {
+	const submission = useSubmissions(createTask);
+	const pendingTasks = () =>
+		[...submission.values()]
+			.filter(
+				(submission) =>
+					submission.pending && Number(submission.input[0].get('boardId')) === props.board.id
+			)
+			.map((submission) => ({ title: submission.input[0].get('title') + ' (pending)' }));
+
+	const tasks = () => (props.board.tasks ? [...props.board.tasks, ...pendingTasks()] : []);
+
 	return (
 		<div
 			class="flex min-h-32 flex-1 flex-col gap-2 self-start rounded bg-gray-800 p-4"
@@ -66,43 +81,32 @@ const Board: Component<{ board: ReturnType<typeof getBoards> }> = (props) => {
 			}}
 			onDrop={async (event) => {
 				if (!event.dataTransfer) throw new Error('No data transfer');
-				const [fromBoardId, taskIdToMove] = event.dataTransfer
-					.getData('text/plain')
-					.split(':')
-					.map(Number);
+				const taskIdToMove = Number(event.dataTransfer.getData('text/plain'));
 
-				await moveTask(taskIdToMove, fromBoardId, props.board.id);
+				await moveTask(taskIdToMove, props.board.id);
 				await revalidate(getBoards.key);
 			}}
 		>
 			<div class="flex gap-1">
 				<h3 class="text-center font-bold">{props.board.title}</h3>
 				<span class="grow" />
-				<button
-					class="flex items-center gap-1 rounded bg-neutral-700 px-4 py-2 text-sm font-semibold uppercase"
-					onClick={async () => {
-						await createTask({
-							title: 'New Task',
-							boardId: props.board.id
-						});
-						await revalidate(getBoards.key);
-					}}
-				>
-					<span class="i-heroicons:document-plus"></span>
-					<span>Create Task</span>
-				</button>
-				<button
-					class="flex items-center gap-1 rounded bg-red-800 px-4 py-2 text-sm font-semibold uppercase"
-					onClick={async () => {
-						await deleteBoard(props.board.id);
-						await revalidate(getBoards.key);
-					}}
-				>
-					<span class="i-heroicons:trash"></span>
-					<span>Delete</span>
-				</button>{' '}
+				<form action={createTask} method="post">
+					<input type="hidden" value={props.board.id} name="boardId" />
+					<input type="hidden" value="Test Task" name="title" />
+					<button class="flex items-center gap-1 rounded bg-neutral-700 px-4 py-2 text-sm font-semibold uppercase">
+						<span class="i-heroicons:document-plus"></span>
+						<span>Create Task</span>
+					</button>
+				</form>
+				<form action={deleteBoard} method="post">
+					<input type="hidden" name="id" value={props.board.id} />
+					<button class="flex items-center gap-1 rounded bg-red-800 px-4 py-2 text-sm font-semibold uppercase">
+						<span class="i-heroicons:trash"></span>
+						<span>Delete</span>
+					</button>
+				</form>
 			</div>
-			<For each={props.board.tasks}>{(task) => <Task task={task} boardId={props.board.id} />}</For>
+			<For each={tasks()}>{(task) => <Task task={task} boardId={props.board.id} />}</For>
 		</div>
 	);
 };

@@ -1,9 +1,12 @@
+import bcrypt from 'bcrypt';
 import { db } from '.';
 import { boards, tasks, users } from './schema';
 
 async function seed() {
 	await db.transaction(async (tx) => {
-		await tx.insert(users).values({ id: 1, email: 'local@local.com', passwordHash: 'local' });
+		await tx
+			.insert(users)
+			.values({ id: 1, email: 'test@test.com', passwordHash: bcrypt.hashSync('password', 10) });
 
 		await tx.insert(boards).values([
 			{

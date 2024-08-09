@@ -1,8 +1,8 @@
-import { cache, redirect, useLocation } from '@solidjs/router';
+import { action, redirect, useLocation } from '@solidjs/router';
 import { getRequestEvent } from 'solid-js/web';
 import { deleteCookie } from 'vinxi/http';
 
-const signOut = cache(async () => {
+const signOut = action(async () => {
 	'use server';
 
 	const event = getRequestEvent()!;
@@ -20,9 +20,9 @@ export default function Nav() {
 				<li class={`border-b-2 ${active('/')} mx-1.5 sm:mx-6`}>
 					<a href="/">Home</a>
 				</li>
-				<button type="button" onClick={() => signOut()}>
-					Sign Out
-				</button>
+				<form action={signOut} method="post">
+					<button type="submit">Sign Out</button>
+				</form>
 			</ul>
 		</nav>
 	);

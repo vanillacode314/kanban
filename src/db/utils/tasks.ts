@@ -28,6 +28,23 @@ const createTask = action(async (formData: FormData) => {
 	return $task;
 }, 'create-task');
 
+const updateTask = action(async (formData: FormData) => {
+	'use server';
+
+	const user = await getUser();
+	if (!user) return new Error('Unauthorized');
+
+	const id = Number(formData.get('id'));
+	const title = String(formData.get('title'));
+
+	const $task = await db
+		.update(tasks)
+		.set({ title })
+		.where(and(eq(tasks.id, id), eq(tasks.userId, user.id)))
+		.returning();
+	return $task;
+}, 'update-task');
+
 const deleteTask = action(async (formData: FormData) => {
 	'use server';
 
@@ -38,4 +55,4 @@ const deleteTask = action(async (formData: FormData) => {
 	await db.delete(tasks).where(and(eq(tasks.id, taskId), eq(tasks.userId, user.id)));
 }, 'delete-task');
 
-export { createTask, deleteTask, moveTask };
+export { createTask, deleteTask, moveTask, updateTask };

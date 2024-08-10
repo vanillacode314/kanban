@@ -41,6 +41,23 @@ const createBoard = action(async (formData: FormData) => {
 	return $board;
 }, 'create-board');
 
+const updateBoard = action(async (formData: FormData) => {
+	'use server';
+
+	const user = await getUser();
+	if (!user) return new Error('Unauthorized');
+
+	const id = Number(formData.get('id'));
+	const title = String(formData.get('title'));
+	const $board = await db
+		.update(boards)
+		.set({ title: title })
+		.where(and(eq(boards.id, id), eq(boards.userId, user.id)))
+		.returning();
+
+	return $board;
+}, 'update-board');
+
 const deleteBoard = action(async (formData: FormData) => {
 	'use server';
 
@@ -51,4 +68,4 @@ const deleteBoard = action(async (formData: FormData) => {
 	await db.delete(boards).where(and(eq(boards.id, boardId), eq(boards.userId, user.id)));
 }, 'delete-board');
 
-export { createBoard, deleteBoard, getBoards };
+export { createBoard, deleteBoard, getBoards, updateBoard };

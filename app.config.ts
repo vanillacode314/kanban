@@ -3,6 +3,7 @@ import { presetIcons, presetWebFonts } from 'unocss';
 import Unocss from 'unocss/vite';
 
 export default defineConfig({
+	devOverlay: true,
 	vite: {
 		plugins: [
 			Unocss({

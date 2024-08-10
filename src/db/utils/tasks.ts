@@ -1,12 +1,13 @@
 import { action } from '@solidjs/router';
 import { and, eq } from 'drizzle-orm';
+import { getRequestEvent } from 'solid-js/web';
 import { db } from '~/db';
 import { type TBoard, type TTask, tasks } from '~/db/schema';
-import { getUser } from './users';
 
 const moveTask = async (taskId: TTask['id'], toBoardId: TBoard['id']) => {
 	'use server';
-	const user = await getUser();
+	const event = getRequestEvent()!;
+	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
 	await db
@@ -18,7 +19,8 @@ const moveTask = async (taskId: TTask['id'], toBoardId: TBoard['id']) => {
 const createTask = action(async (formData: FormData) => {
 	'use server';
 
-	const user = await getUser();
+	const event = getRequestEvent()!;
+	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
 	const title = String(formData.get('title'));
@@ -31,7 +33,8 @@ const createTask = action(async (formData: FormData) => {
 const updateTask = action(async (formData: FormData) => {
 	'use server';
 
-	const user = await getUser();
+	const event = getRequestEvent()!;
+	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
 	const id = Number(formData.get('id'));
@@ -48,7 +51,8 @@ const updateTask = action(async (formData: FormData) => {
 const deleteTask = action(async (formData: FormData) => {
 	'use server';
 
-	const user = await getUser();
+	const event = getRequestEvent()!;
+	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
 	const taskId = Number(formData.get('id'));

@@ -16,15 +16,17 @@ function getServerCookies() {
 
 export default function App() {
 	const storageManager = cookieStorageManagerSSR(isServer ? getServerCookies() : document.cookie);
+
 	return (
 		<Router
+			singleFlight={false}
 			root={(props) => (
 				<>
 					<ColorModeScript storageType={storageManager.type} />
 					<ColorModeProvider storageManager={storageManager}>
-						<Nav class="container mx-auto" />
-						<ErrorBoundary fallback={(error) => <div>{error.message}</div>}>
+						<ErrorBoundary fallback={(error) => <div>Error: {error.message}</div>}>
 							<Suspense>
+								<Nav class="container mx-auto" />
 								<div class="container mx-auto h-full p-4">{props.children}</div>
 							</Suspense>
 						</ErrorBoundary>

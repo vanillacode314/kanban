@@ -13,6 +13,7 @@ import { users } from '~/db/schema';
 
 const signIn = action(async (formData: FormData) => {
 	'use server';
+	console.warn('DEBUGPRINT[1]: signin.tsx:16 (after use server;)');
 	const email = String(formData.get('email'));
 	const password = String(formData.get('password'));
 

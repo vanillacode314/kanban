@@ -7,7 +7,7 @@ import { TextField, TextFieldInput, TextFieldLabel } from '~/components/ui/text-
 import { createBoard, getBoards } from '~/db/utils/boards';
 
 export const route = {
-	load: () => getBoards()
+	preload: () => getBoards()
 };
 
 export default function Home() {

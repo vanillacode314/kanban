@@ -35,31 +35,25 @@ export const Board: Component<{ board: ReturnType<typeof getBoards> }> = (props)
 				await revalidate(getBoards.key);
 			}}
 		>
-			<div class="flex items-center gap-4">
+			<div class="flex items-center gap-2">
 				<h3 class="text-center font-bold">{props.board.title}</h3>
 				<span class="grow" />
 				<BaseModal
 					title="Create Task"
 					trigger={
-						<Button class="flex items-center gap-2" as="div">
+						<Button class="flex items-center gap-2" as="div" title="Create Task" size="icon">
 							<span class="i-heroicons:plus text-lg"></span>
-							<span>Create Task</span>
 						</Button>
 					}
 				>
 					{(close) => (
-						<form
-							action={createTask}
-							method="post"
-							class="flex flex-col gap-4"
-							onSubmit={() => close()}
-						>
+						<form action={createTask} method="post" class="flex flex-col gap-4">
 							<input type="hidden" name="boardId" value={props.board.id} />
 							<TextField class="grid w-full items-center gap-1.5">
 								<TextFieldLabel for="title">Title</TextFieldLabel>
 								<TextFieldInput type="text" id="title" name="title" placeholder="Title" />
 							</TextField>
-							<Button type="submit" class="self-end">
+							<Button type="submit" class="self-end" onClick={() => close()}>
 								Submit
 							</Button>
 						</form>
@@ -68,18 +62,19 @@ export const Board: Component<{ board: ReturnType<typeof getBoards> }> = (props)
 				<BaseModal
 					title="Update Board"
 					trigger={
-						<Button as="div" variant="outline" class="flex items-center gap-2" title="Update Board">
+						<Button
+							as="div"
+							variant="outline"
+							class="flex items-center gap-2"
+							title="Update Board"
+							size="icon"
+						>
 							<span class="i-heroicons:pencil text-lg"></span>
 						</Button>
 					}
 				>
 					{(close) => (
-						<form
-							action={updateBoard}
-							method="post"
-							class="flex flex-col gap-4"
-							onSubmit={() => close()}
-						>
+						<form action={updateBoard} method="post" class="flex flex-col gap-4">
 							<input type="hidden" name="id" value={props.board.id} />
 							<TextField class="grid w-full items-center gap-1.5">
 								<TextFieldLabel for="title">Title</TextFieldLabel>
@@ -91,7 +86,7 @@ export const Board: Component<{ board: ReturnType<typeof getBoards> }> = (props)
 									value={props.board.title}
 								/>
 							</TextField>
-							<Button type="submit" class="self-end">
+							<Button type="submit" class="self-end" onClick={() => close()}>
 								Submit
 							</Button>
 						</form>
@@ -105,6 +100,7 @@ export const Board: Component<{ board: ReturnType<typeof getBoards> }> = (props)
 							variant="destructive"
 							class="flex items-center gap-2"
 							type="submit"
+							size="icon"
 						>
 							<span class="i-heroicons:trash text-lg"></span>
 						</TooltipTrigger>

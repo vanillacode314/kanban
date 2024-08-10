@@ -18,25 +18,23 @@ export const Task: Component<{ boardId: TBoard['id']; task: TTask }> = (props) =
 			}}
 		>
 			<span>{props.task.title}</span>
-			<div class="flex flex-wrap items-center justify-end gap-4">
+			<div class="flex flex-wrap items-center justify-end gap-2">
 				<BaseModal
 					title="Update Task"
 					trigger={
-						<Tooltip>
-							<TooltipTrigger as={Button} variant="outline" class="flex items-center gap-2">
-								<span class="i-heroicons:pencil text-lg"></span>
-							</TooltipTrigger>
-							<TooltipContent>Edit</TooltipContent>
-						</Tooltip>
+						<Button
+							as="div"
+							variant="outline"
+							class="flex items-center gap-2"
+							title="Update"
+							size="icon"
+						>
+							<span class="i-heroicons:pencil text-lg"></span>
+						</Button>
 					}
 				>
 					{(close) => (
-						<form
-							action={updateTask}
-							method="post"
-							class="flex flex-col gap-4"
-							onSubmit={() => close()}
-						>
+						<form action={updateTask} method="post" class="flex flex-col gap-4">
 							<input type="hidden" name="id" value={props.task.id} />
 							<TextField class="grid w-full items-center gap-1.5">
 								<TextFieldLabel for="title">Title</TextFieldLabel>
@@ -48,7 +46,7 @@ export const Task: Component<{ boardId: TBoard['id']; task: TTask }> = (props) =
 									value={props.task.title}
 								/>
 							</TextField>
-							<Button type="submit" class="self-end">
+							<Button type="submit" class="self-end" onClick={() => close()}>
 								Submit
 							</Button>
 						</form>
@@ -62,6 +60,7 @@ export const Task: Component<{ boardId: TBoard['id']; task: TTask }> = (props) =
 							variant="destructive"
 							class="flex items-center gap-2"
 							type="submit"
+							size="icon"
 						>
 							<span class="i-heroicons:trash text-lg"></span>
 						</TooltipTrigger>

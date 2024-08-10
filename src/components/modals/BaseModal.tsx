@@ -1,4 +1,5 @@
 import { JSXElement, createEffect, createSignal, createUniqueId } from 'solid-js';
+import { Portal } from 'solid-js/web';
 
 type Props =
 	| {
@@ -35,21 +36,23 @@ export function Modal(props: Props) {
 			<button popovertarget={id} data-debug={props.title}>
 				{props.trigger}
 			</button>
-			<dialog
-				id={id}
-				ref={setEl}
-				popover
-				onClick={(event) => {
-					const target = event.target as HTMLDialogElement;
-					target !== el();
-					if (target === el()) el()?.close();
-				}}
-				onClose={() => setOpen(false)}
-				class="min-w-80 rounded-lg border bg-background p-4"
-			>
-				<h4 class="mb-2 text-lg font-medium">{props.title}</h4>
-				<div>{props.children(() => el()?.close())}</div>
-			</dialog>
+			<Portal>
+				<dialog
+					id={id}
+					ref={setEl}
+					popover
+					onClick={(event) => {
+						const target = event.target as HTMLDialogElement;
+						target !== el();
+						if (target === el()) el()?.close();
+					}}
+					onClose={() => setOpen(false)}
+					class="min-w-80 rounded-lg border bg-background p-4"
+				>
+					<h4 class="mb-2 text-lg font-medium">{props.title}</h4>
+					<div>{props.children(() => el()?.close())}</div>
+				</dialog>
+			</Portal>
 		</>
 	);
 }

@@ -1,13 +1,12 @@
 import { InferSelectModel, sql } from 'drizzle-orm';
 import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-// Auth tables
 const refreshTokens = sqliteTable('refreshTokens', {
 	id: integer('id').notNull().primaryKey(),
 	userId: integer('userId')
 		.notNull()
 		.references(() => users.id),
-	refreshToken: text('refreshToken').notNull(),
+	token: text('token').notNull(),
 	expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull()
 });
 
@@ -16,13 +15,13 @@ const verificationTokens = sqliteTable('verificationTokens', {
 	userId: integer('userId')
 		.notNull()
 		.references(() => users.id),
-	verificationToken: text('verificationToken').notNull(),
+	token: text('token').notNull(),
 	expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull()
 });
 
 const users = sqliteTable('users', {
 	id: integer('id').notNull().primaryKey(),
-	email: text('email').notNull(),
+	email: text('email').notNull().unique(),
 	passwordHash: text('passwordHash').notNull(),
 	emailVerified: integer('emailVerified', { mode: 'boolean' }).default(false),
 	createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(unixepoch('now'))`),
@@ -60,6 +59,7 @@ const tasks = sqliteTable('tasks', {
 
 type TBoard = InferSelectModel<typeof boards>;
 type TTask = InferSelectModel<typeof tasks>;
+type TUser = InferSelectModel<typeof users>;
 
 export { boards, refreshTokens, tasks, users, verificationTokens };
-export type { TBoard, TTask };
+export type { TBoard, TTask, TUser };

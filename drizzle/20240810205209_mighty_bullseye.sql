@@ -10,7 +10,7 @@ CREATE TABLE `boards` (
 CREATE TABLE `refreshTokens` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`userId` integer NOT NULL,
-	`refreshToken` text NOT NULL,
+	`token` text NOT NULL,
 	`expiresAt` integer NOT NULL,
 	FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
@@ -38,7 +38,9 @@ CREATE TABLE `users` (
 CREATE TABLE `verificationTokens` (
 	`id` integer PRIMARY KEY NOT NULL,
 	`userId` integer NOT NULL,
-	`verificationToken` text NOT NULL,
+	`token` text NOT NULL,
 	`expiresAt` integer NOT NULL,
 	FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE no action
 );
+--> statement-breakpoint
+CREATE UNIQUE INDEX `users_email_unique` ON `users` (`email`);

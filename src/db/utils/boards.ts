@@ -8,7 +8,6 @@ const getBoards = cache(async () => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const cookie = event.request.headers.get('cookie');
 	const user = event.locals.user;
 	if (!user) throw new Error('Unauthorized');
 

@@ -1,7 +1,10 @@
 import { useColorMode } from '@kobalte/core';
 import { action, redirect } from '@solidjs/router';
+import { eq } from 'drizzle-orm';
 import { getRequestEvent } from 'solid-js/web';
-import { deleteCookie } from 'vinxi/http';
+import { deleteCookie, getCookie } from 'vinxi/http';
+import { db } from '~/db';
+import { refreshTokens } from '~/db/schema';
 import { cn } from '~/lib/utils';
 import { Button } from './ui/button';
 
@@ -10,6 +13,9 @@ const signOut = action(async () => {
 
 	const event = getRequestEvent()!;
 	deleteCookie(event.nativeEvent, 'accessToken');
+	const refreshToken = getCookie(event.nativeEvent, 'refreshToken');
+	deleteCookie(event.nativeEvent, 'refreshToken');
+	if (refreshToken) await db.delete(refreshTokens).where(eq(refreshTokens.token, refreshToken));
 	return redirect('/auth/signin');
 }, 'signout');
 

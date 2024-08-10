@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
@@ -6,8 +7,10 @@ export default defineConfig({
 	migrations: {
 		prefix: 'supabase'
 	},
+	driver: 'turso',
 	dbCredentials: {
-		url: 'file:./src/db/sqlite.db'
+		url: process.env.TURSO_CONNECTION_URL!,
+		authToken: process.env.TURSO_AUTH_TOKEN!
 	},
 	verbose: true,
 	strict: true

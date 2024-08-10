@@ -105,6 +105,12 @@
       "rlig" 1,
       "calt" 1;
   }
+  :root, body, #app {
+    height: 100%;
+  }
+  *::backdrop {
+    backdrop-filter: blur(6px);
+  }
 }
 
 @media (max-width: 640px) {
@@ -113,6 +119,3 @@
   }
 }
 
-:root, body, #app {
-  height: 100%;
-}

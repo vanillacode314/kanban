@@ -9,30 +9,44 @@ import { Button } from '~/components/ui/button';
 import { Card } from '~/components/ui/card';
 import { TextField, TextFieldInput, TextFieldLabel } from '~/components/ui/text-field';
 import { db } from '~/db';
-import { users } from '~/db/schema';
+import { refreshTokens, users } from '~/db/schema';
+
+const SIX_MONTHS_IN_SECONDS = 15552000;
 
 const signIn = action(async (formData: FormData) => {
 	'use server';
-	console.warn('DEBUGPRINT[1]: signin.tsx:16 (after use server;)');
 	const email = String(formData.get('email'));
 	const password = String(formData.get('password'));
 
-	const [user] = await db
-		.select({ id: users.id, passwordHash: users.passwordHash })
-		.from(users)
-		.where(eq(users.email, email));
+	const [user] = await db.select().from(users).where(eq(users.email, email));
 
 	if (!user) return new Error('Email or password incorrect', { cause: 'INVALID_CREDENTIALS' });
 
 	if (!(await bcrypt.compare(password, user.passwordHash)))
 		return new Error('Email or password incorrect', { cause: 'INVALID_CREDENTIALS' });
 
-	const token = jwt.sign({ id: user.id }, process.env.AUTH_SECRET!, {
-		expiresIn: '3 days'
+	const accessToken = jwt.sign({ ...user, passwordHash: undefined }, process.env.AUTH_SECRET!, {
+		expiresIn: '1h'
+	});
+
+	const refreshToken = jwt.sign({}, process.env.AUTH_SECRET!, {
+		expiresIn: SIX_MONTHS_IN_SECONDS
+	});
+
+	await db.insert(refreshTokens).values({
+		userId: user.id,
+		token: refreshToken,
+		expiresAt: new Date(Date.now() + SIX_MONTHS_IN_SECONDS * 1000)
 	});
 
 	const event = getRequestEvent()!;
-	setCookie(event.nativeEvent, 'accessToken', token, {
+	setCookie(event.nativeEvent, 'accessToken', accessToken, {
+		httpOnly: true,
+		secure: true,
+		path: '/',
+		sameSite: 'lax'
+	});
+	setCookie(event.nativeEvent, 'refreshToken', refreshToken, {
 		httpOnly: true,
 		secure: true,
 		path: '/',

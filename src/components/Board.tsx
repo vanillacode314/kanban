@@ -68,12 +68,9 @@ export const Board: Component<{ board: ReturnType<typeof getBoards> }> = (props)
 				<BaseModal
 					title="Update Board"
 					trigger={
-						<Tooltip>
-							<TooltipTrigger as={Button} variant="outline" class="flex items-center gap-2">
-								<span class="i-heroicons:pencil text-lg"></span>
-							</TooltipTrigger>
-							<TooltipContent>Edit</TooltipContent>
-						</Tooltip>
+						<Button as="div" variant="outline" class="flex items-center gap-2" title="Update Board">
+							<span class="i-heroicons:pencil text-lg"></span>
+						</Button>
 					}
 				>
 					{(close) => (

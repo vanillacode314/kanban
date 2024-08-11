@@ -1,5 +1,6 @@
 import { action, redirect, useSubmission } from '@solidjs/router';
 import bcrypt from 'bcrypt';
+import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { createEffect } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
@@ -18,6 +19,11 @@ const signUp = action(async (formData: FormData) => {
 	const password = String(formData.get('password'));
 
 	const passwordHash = await bcrypt.hash(password, 10);
+
+	{
+		const [user] = await db.select().from(users).where(eq(users.email, email));
+		if (user) return new Error('Email already exists', { cause: 'EMAIL_ALREADY_EXISTS' });
+	}
 
 	const [user] = await db.insert(users).values({ email, passwordHash }).returning();
 
@@ -61,11 +67,14 @@ export default function SignInPage() {
 		if (!result) return;
 		if (result instanceof Error) {
 			switch (result.cause) {
+				case 'EMAIL_ALREADY_EXISTS':
+					alert(result.message);
+					break;
 				case 'INTERNAL_SERVER_ERROR':
 					alert(result.message);
 					break;
 				default:
-					break;
+					console.error(result);
 			}
 		}
 	});

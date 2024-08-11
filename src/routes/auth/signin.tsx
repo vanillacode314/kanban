@@ -67,7 +67,7 @@ export default function SignInPage() {
 					alert(result.message);
 					break;
 				default:
-					break;
+					console.error(result);
 			}
 		}
 	});

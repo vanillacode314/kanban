@@ -47,6 +47,9 @@ importers:
       solid-js:
         specifier: ^1.8.20
         version: 1.8.20
+      solid-sonner:
+        specifier: ^0.2.8
+        version: 0.2.8(solid-js@1.8.20)
       tailwind-merge:
         specifier: ^2.4.0
         version: 2.4.0
@@ -3434,6 +3437,10 @@ packages:
     peerDependencies:
       solid-js: ^1.3
 
+  solid-sonner@0.2.8:
+    resolution: {integrity: sha512-EQ2EIznvHHpAmkYh2CTu0AdCgmPJRJWLGFRWygE8j+vMEfvIV2wotHU5qgWzqzVTG1SODGsay2Lwq6ENWx/rPA==}
+    peerDependencies:
+      solid-js: ^1.6.0
   solid-use@0.8.0:
     resolution: {integrity: sha512-YX+XmcKLvSx3bwMimMhFy40ZkDnShnUcEw6cW6fSscwKEgl1TG3GlgAvkBmQ3AeWjvQSd8+HGTr82ImsrjkkqA==}
     engines: {node: '>=10'}
@@ -7133,6 +7140,10 @@ snapshots:
       solid-js: 1.8.20
     transitivePeerDependencies:
       - supports-color
+
+  solid-sonner@0.2.8(solid-js@1.8.20):
+    dependencies:
+      solid-js: 1.8.20
 
   solid-use@0.8.0(solid-js@1.8.20):
     dependencies:

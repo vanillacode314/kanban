@@ -13,6 +13,8 @@ services:
       - database
   database:
     image: ghcr.io/tursodatabase/libsql-server:latest
+    volumes:
+      - ./database:/var/lib/sqld
     ports:
       - "3002:8080"
 

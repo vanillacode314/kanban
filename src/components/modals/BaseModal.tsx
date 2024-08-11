@@ -50,7 +50,7 @@ export function Modal(props: Props) {
 					class="min-w-80 rounded-lg border bg-background p-4"
 				>
 					<h4 class="mb-2 text-lg font-medium">{props.title}</h4>
-					<div>{props.children(() => el()?.close())}</div>
+					<div>{props.children(() => el()?.hidePopover())}</div>
 				</dialog>
 			</Portal>
 		</>

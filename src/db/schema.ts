@@ -1,11 +1,11 @@
 import { InferSelectModel, sql } from 'drizzle-orm';
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 
 const refreshTokens = sqliteTable('refreshTokens', {
 	id: integer('id').notNull().primaryKey(),
 	userId: integer('userId')
 		.notNull()
-		.references(() => users.id),
+		.references(() => users.id, { onDelete: 'cascade' }),
 	token: text('token').notNull(),
 	expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull()
 });
@@ -14,9 +14,11 @@ const verificationTokens = sqliteTable('verificationTokens', {
 	id: integer('id').notNull().primaryKey(),
 	userId: integer('userId')
 		.notNull()
-		.references(() => users.id),
+		.references(() => users.id, { onDelete: 'cascade' }),
 	token: text('token').notNull(),
-	expiresAt: integer('expiresAt', { mode: 'timestamp' }).notNull()
+	expiresAt: integer('expiresAt', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date(Date.now() + 600000))
 });
 
 const users = sqliteTable('users', {
@@ -42,20 +44,29 @@ const boards = sqliteTable('boards', {
 		.notNull()
 });
 
-const tasks = sqliteTable('tasks', {
-	id: integer('id').notNull().primaryKey(),
-	title: text('title').notNull(),
-	createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(unixepoch('now'))`),
-	updatedAt: integer('updatedAt', { mode: 'timestamp' })
-		.default(sql`(unixepoch('now'))`)
-		.$onUpdateFn(() => new Date()),
-	boardId: integer('boardId')
-		.references(() => boards.id, { onDelete: 'cascade' })
-		.notNull(),
-	userId: integer('userId')
-		.references(() => users.id, { onDelete: 'cascade' })
-		.notNull()
-});
+const tasks = sqliteTable(
+	'tasks',
+	{
+		id: integer('id').notNull().primaryKey(),
+		title: text('title').notNull(),
+		index: integer('index').notNull(),
+		createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(unixepoch('now'))`),
+		updatedAt: integer('updatedAt', { mode: 'timestamp' })
+			.default(sql`(unixepoch('now'))`)
+			.$onUpdateFn(() => new Date()),
+		boardId: integer('boardId')
+			.references(() => boards.id, { onDelete: 'cascade' })
+			.notNull(),
+		userId: integer('userId')
+			.references(() => users.id, { onDelete: 'cascade' })
+			.notNull()
+	},
+	(table) => {
+		return {
+			unq: unique().on(table.index, table.boardId)
+		};
+	}
+);
 
 type TBoard = InferSelectModel<typeof boards>;
 type TTask = InferSelectModel<typeof tasks>;

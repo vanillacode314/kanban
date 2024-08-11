@@ -2,6 +2,7 @@ import { A, action, redirect, useSubmission } from '@solidjs/router';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
+import { nanoid } from 'nanoid';
 import { Show, createEffect, createSignal, onCleanup, untrack } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { toast } from 'solid-sonner';
@@ -19,7 +20,8 @@ import { TextField, TextFieldInput, TextFieldLabel } from '~/components/ui/text-
 import { Toggle } from '~/components/ui/toggle';
 import { ONE_MONTH_IN_SECONDS } from '~/consts';
 import { db } from '~/db';
-import { refreshTokens, users } from '~/db/schema';
+import { refreshTokens, users, verificationTokens } from '~/db/schema';
+import { resend } from '~/utils/resend';
 
 const signUp = action(async (formData: FormData) => {
 	'use server';
@@ -33,7 +35,18 @@ const signUp = action(async (formData: FormData) => {
 		if (user) return new Error('Email already exists', { cause: 'EMAIL_ALREADY_EXISTS' });
 	}
 
-	const [user] = await db.insert(users).values({ email, passwordHash }).returning();
+	const [user, verificationToken] = await db.transaction(async (tx) => {
+		const [user] = await tx.insert(users).values({ email, passwordHash }).returning();
+		const [{ token }] = await tx
+			.insert(verificationTokens)
+			.values({ token: nanoid(), userId: user.id })
+			.returning({ token: verificationTokens.token });
+		if (!token) {
+			tx.rollback();
+			return;
+		}
+		return [user, token];
+	});
 
 	if (!user) return new Error('Database Error', { cause: 'INTERNAL_SERVER_ERROR' });
 
@@ -63,6 +76,19 @@ const signUp = action(async (formData: FormData) => {
 		secure: true,
 		path: '/',
 		sameSite: 'lax'
+	});
+
+	const res = await resend.emails.send({
+		from: 'justkanban <no-reply@notifications.raqueeb.com>',
+		to: [user.email],
+		subject: 'Confirm your email',
+		text: `Goto this link to confirm your email: ${new URL(event.request.url).origin}/public/confirm-email?token=${verificationToken}`,
+		tags: [
+			{
+				name: 'category',
+				value: 'confirm_email'
+			}
+		]
 	});
 	return redirect('/');
 }, 'signup');

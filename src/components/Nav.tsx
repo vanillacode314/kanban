@@ -1,9 +1,10 @@
-import { useColorMode } from '@kobalte/core';
+import { useColorMode } from '@kobalte/core/color-mode';
 import { action, redirect, useLocation } from '@solidjs/router';
 import { eq } from 'drizzle-orm';
 import { Show, createResource } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { deleteCookie, getCookie } from 'vinxi/http';
+import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import { db } from '~/db';
 import { refreshTokens } from '~/db/schema';
 import { getUser } from '~/db/utils/users';
@@ -27,11 +28,10 @@ export default function Nav(props: { class?: string }) {
 		() => location.pathname,
 		() => getUser()
 	);
-
 	const { toggleColorMode } = useColorMode();
 
 	return (
-		<div class={cn('border-offset-background full-width border-b bg-background py-4', props.class)}>
+		<nav class={cn('border-offset-background full-width border-b bg-background py-4', props.class)}>
 			<div class="flex items-center gap-4">
 				<a href="/">
 					<p class="font-bold uppercase tracking-wide">Kanban</p>
@@ -51,6 +51,12 @@ export default function Nav(props: { class?: string }) {
 					<span class="sr-only">Toggle theme</span>
 				</Button>
 			</div>
-		</div>
+			<Show when={user() && !user()?.emailVerified}>
+				<Alert class="mt-4">
+					<AlertTitle>Email not verified</AlertTitle>
+					<AlertDescription>Please check your inbox to verify your email</AlertDescription>
+				</Alert>
+			</Show>
+		</nav>
 	);
 }

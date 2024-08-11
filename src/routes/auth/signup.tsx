@@ -101,11 +101,10 @@ export default function SignUpPage() {
 	createEffect(() => {
 		const { result, pending } = submission;
 		return untrack(() => {
+			if (toastId) toast.dismiss(toastId);
 			if (pending) {
 				toastId = toast.loading('Creating account...', { duration: Infinity });
 				return toastId;
-			} else {
-				if (toastId) toast.dismiss(toastId);
 			}
 			if (!result) return;
 			if (result instanceof Error) {

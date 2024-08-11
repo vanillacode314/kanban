@@ -71,11 +71,10 @@ export default function SignInPage() {
 	createEffect(() => {
 		const { result, pending } = submission;
 		untrack(() => {
+			if (toastId) toast.dismiss(toastId);
 			if (pending) {
 				toastId = toast.loading('Logging in...', { duration: Infinity });
 				return;
-			} else {
-				if (toastId) toast.dismiss(toastId);
 			}
 			if (!result) return;
 			if (result instanceof Error) {

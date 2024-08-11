@@ -24,7 +24,7 @@ export default function Home() {
 	const boards = () => (serverBoards() ? [...serverBoards()!, ...pendingBoards()] : []);
 
 	return (
-		<div class="flex flex-col gap-4 p-4">
+		<div class="flex h-full flex-col gap-4 p-4">
 			<div class="flex justify-end gap-4">
 				<BaseModal
 					title="Create Board"
@@ -53,7 +53,7 @@ export default function Home() {
 					)}
 				</BaseModal>
 			</div>
-			<div class="grid h-full grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-4">
+			<div class="grid h-full grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
 				<For each={boards()}>{(board) => <Board board={board} />}</For>
 			</div>
 		</div>

@@ -6,6 +6,8 @@ import { H3Event, getCookie, setCookie } from 'vinxi/http';
 import { db } from './db';
 import { TUser, refreshTokens, users } from './db/schema';
 
+const PUBLIC_API_ROUTE_REGEX = new RegExp('^/api/v\\d+/public/.*');
+
 export default createMiddleware({
 	onRequest: [
 		async (event) => {
@@ -14,7 +16,7 @@ export default createMiddleware({
 			const pathname = new URL(event.request.url).pathname;
 			const isServerRoute = pathname.startsWith('/_server');
 			const isAuthRoute = pathname.startsWith('/auth');
-			const isPublicRoute = pathname.startsWith('/public');
+			const isPublicRoute = pathname.startsWith('/public') || PUBLIC_API_ROUTE_REGEX.test(pathname);
 			const isPrivateRoute = !(isServerRoute || isAuthRoute || isPublicRoute);
 
 			if (event.locals.user && isAuthRoute) {

@@ -21,7 +21,7 @@ import { Toggle } from '~/components/ui/toggle';
 import { ONE_MONTH_IN_SECONDS } from '~/consts';
 import { db } from '~/db';
 import { refreshTokens, users, verificationTokens } from '~/db/schema';
-import { resend } from '~/utils/resend';
+import { resend } from '~/utils/resend.server';
 
 const signUp = action(async (formData: FormData) => {
 	'use server';
@@ -78,11 +78,11 @@ const signUp = action(async (formData: FormData) => {
 		sameSite: 'lax'
 	});
 
-	const res = await resend.emails.send({
+	await resend.emails.send({
 		from: 'justkanban <no-reply@notifications.raqueeb.com>',
 		to: [user.email],
 		subject: 'Confirm your email',
-		text: `Goto this link to confirm your email: ${new URL(event.request.url).origin}/public/confirm-email?token=${verificationToken}`,
+		text: `Goto this link to confirm your email: ${new URL(event.request.url).origin}/api/v1/public/confirm-email?token=${verificationToken}`,
 		tags: [
 			{
 				name: 'category',

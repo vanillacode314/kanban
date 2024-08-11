@@ -70,10 +70,10 @@ export default function SignInPage() {
 	let toastId: string | number | undefined;
 	createEffect(() => {
 		const { result, pending } = submission;
-		return untrack(() => {
+		untrack(() => {
 			if (pending) {
 				toastId = toast.loading('Logging in...', { duration: Infinity });
-				return toastId;
+				return;
 			} else {
 				if (toastId) toast.dismiss(toastId);
 			}

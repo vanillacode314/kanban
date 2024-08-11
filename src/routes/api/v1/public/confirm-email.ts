@@ -16,7 +16,7 @@ export const GET = async (event: APIEvent) => {
 
 	if (!verificationToken) return new Response('Invalid token', { status: 400 });
 
-	const user = await db.transaction(async (tx) => {
+	await db.transaction(async (tx) => {
 		const user = await tx
 			.update(users)
 			.set({ emailVerified: true })
@@ -25,7 +25,6 @@ export const GET = async (event: APIEvent) => {
 		await tx
 			.delete(verificationTokens)
 			.where(eq(verificationTokens.userId, verificationToken.userId));
-		return user;
 	});
 
 	deleteCookie(event.nativeEvent, 'accessToken');

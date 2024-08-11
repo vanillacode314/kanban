@@ -1,14 +1,15 @@
 import { useColorMode } from '@kobalte/core/color-mode';
 import { action, redirect, useLocation } from '@solidjs/router';
+import { RequestEventLocals } from '@solidjs/start/server';
 import { eq } from 'drizzle-orm';
-import { Show, createResource } from 'solid-js';
+import { Show, createResource, createSignal } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { deleteCookie, getCookie } from 'vinxi/http';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
 import { db } from '~/db';
 import { refreshTokens } from '~/db/schema';
-import { getUser } from '~/db/utils/users';
 import { cn } from '~/lib/utils';
+import { getUser, refreshAccessToken, resendVerificationEmail } from '~/utils/auth.server';
 import { Button } from './ui/button';
 
 const signOut = action(async () => {
@@ -26,7 +27,8 @@ export default function Nav(props: { class?: string }) {
 	const location = useLocation();
 	const [user] = createResource(
 		() => location.pathname,
-		() => getUser()
+		() => getUser(),
+		{ initialValue: null }
 	);
 	const { toggleColorMode } = useColorMode();
 
@@ -51,12 +53,48 @@ export default function Nav(props: { class?: string }) {
 					<span class="sr-only">Toggle theme</span>
 				</Button>
 			</div>
-			<Show when={user() && !user()?.emailVerified}>
-				<Alert class="mt-4">
+			<VerificationEmailAlert user={user()} />
+		</nav>
+	);
+}
+
+function VerificationEmailAlert(props: { user: RequestEventLocals['user'] }) {
+	const [cooldown, setCooldown] = createSignal<number>(0);
+
+	function countdown() {
+		if (cooldown() > 0) return;
+		setCooldown(60);
+		const interval = setInterval(() => {
+			if (cooldown() <= 0) {
+				clearInterval(interval);
+			}
+			setCooldown((value) => value - 1);
+		}, 1000);
+	}
+
+	return (
+		<Show when={props.user && !props.user.emailVerified}>
+			<Alert class="mt-4 flex justify-between gap-4">
+				<div>
 					<AlertTitle>Email not verified</AlertTitle>
 					<AlertDescription>Please check your inbox to verify your email</AlertDescription>
-				</Alert>
-			</Show>
-		</nav>
+				</div>
+				<div class="flex gap-4">
+					<Button variant="secondary" onClick={() => refreshAccessToken()}>
+						Check Again
+					</Button>
+					<Button
+						variant="outline"
+						onClick={() => {
+							countdown();
+							resendVerificationEmail();
+						}}
+						disabled={cooldown() > 0}
+					>
+						Send Again {cooldown() > 0 ? <>(Wait {cooldown()}s)</> : ''}
+					</Button>
+				</div>
+			</Alert>
+		</Show>
 	);
 }

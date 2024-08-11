@@ -2,7 +2,7 @@ import { A, action, redirect, useSubmission } from '@solidjs/router';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
-import { Show, createEffect, createSignal, untrack } from 'solid-js';
+import { Show, createEffect, createSignal, onCleanup, untrack } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { toast } from 'solid-sonner';
 import { setCookie } from 'vinxi/http';
@@ -71,9 +71,16 @@ export default function SignUpPage() {
 	const [passwordVisible, setPasswordVisible] = createSignal<boolean>(false);
 	const submission = useSubmission(signUp);
 
+	let toastId: string | number | undefined;
 	createEffect(() => {
-		const result = submission.result;
-		untrack(() => {
+		const { result, pending } = submission;
+		return untrack(() => {
+			if (pending) {
+				toastId = toast.loading('Creating account...', { duration: Infinity });
+				return toastId;
+			} else {
+				if (toastId) toast.dismiss(toastId);
+			}
 			if (!result) return;
 			if (result instanceof Error) {
 				switch (result.cause) {
@@ -85,6 +92,10 @@ export default function SignUpPage() {
 				}
 			}
 		});
+	});
+
+	onCleanup(() => {
+		if (toastId) toast.dismiss(toastId);
 	});
 
 	return (

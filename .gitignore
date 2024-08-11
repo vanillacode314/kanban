@@ -28,3 +28,6 @@ gitignore
 Thumbs.db
 
 sqlite.db
+
+# Docker
+docker/database/

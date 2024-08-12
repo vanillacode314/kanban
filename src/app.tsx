@@ -31,8 +31,8 @@ function RootLayout(props: RouteSectionProps) {
 					<Suspense>
 						<ColoredToaster />
 						<div class="flex h-full flex-col">
-							<Nav class="container mx-auto" />
-							<div class="container mx-auto h-full p-4">{props.children}</div>
+							<Nav class="full-width content-grid" />
+							<div class="content-grid h-full">{props.children}</div>
 						</div>
 					</Suspense>
 				</ErrorBoundary>

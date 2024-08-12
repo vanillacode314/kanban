@@ -25,7 +25,7 @@ const signOut = action(async () => {
 
 export default function Nav(props: { class?: string }) {
 	const location = useLocation();
-	const [user] = createResource(
+	const [user, { refetch: refetchUser }] = createResource(
 		() => location.pathname,
 		() => getUser(),
 		{ initialValue: null }
@@ -33,7 +33,7 @@ export default function Nav(props: { class?: string }) {
 	const { toggleColorMode } = useColorMode();
 
 	return (
-		<nav class={cn('border-offset-background full-width border-b bg-background py-4', props.class)}>
+		<nav class={cn('border-offset-background border-b bg-background py-4', props.class)}>
 			<div class="flex items-center gap-4">
 				<a href="/">
 					<p class="font-bold uppercase tracking-wide">Kanban</p>
@@ -53,12 +53,15 @@ export default function Nav(props: { class?: string }) {
 					<span class="sr-only">Toggle theme</span>
 				</Button>
 			</div>
-			<VerificationEmailAlert user={user()} />
+			<VerificationEmailAlert user={user()} refetchUser={refetchUser} />
 		</nav>
 	);
 }
 
-function VerificationEmailAlert(props: { user: RequestEventLocals['user'] }) {
+function VerificationEmailAlert(props: {
+	user: RequestEventLocals['user'];
+	refetchUser: () => void;
+}) {
 	const [cooldown, setCooldown] = createSignal<number>(0);
 
 	function countdown() {
@@ -77,7 +80,10 @@ function VerificationEmailAlert(props: { user: RequestEventLocals['user'] }) {
 			<Alert class="mt-4 flex justify-between gap-4">
 				<div>
 					<AlertTitle>Email not verified</AlertTitle>
-					<AlertDescription>Please check your inbox to verify your email</AlertDescription>
+					<AlertDescription>
+						Please check your inbox to verify your email. Unverified accounts will be deleted 30days
+						from creation.
+					</AlertDescription>
 				</div>
 				<div class="flex gap-4">
 					<Button variant="secondary" onClick={() => refreshAccessToken()}>
@@ -85,9 +91,10 @@ function VerificationEmailAlert(props: { user: RequestEventLocals['user'] }) {
 					</Button>
 					<Button
 						variant="outline"
-						onClick={() => {
+						onClick={async () => {
 							countdown();
-							resendVerificationEmail();
+							await resendVerificationEmail();
+							props.refetchUser();
 						}}
 						disabled={cooldown() > 0}
 					>

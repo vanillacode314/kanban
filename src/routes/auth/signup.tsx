@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { nanoid } from 'nanoid';
-import { Show, createEffect, createSignal, onCleanup, untrack } from 'solid-js';
+import { Show, createEffect, createSignal, untrack } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { toast } from 'solid-sonner';
 import { setCookie } from 'vinxi/http';
@@ -101,26 +101,24 @@ export default function SignUpPage() {
 	createEffect(() => {
 		const { result, pending } = submission;
 		return untrack(() => {
-			if (toastId) toast.dismiss(toastId);
 			if (pending) {
-				toastId = toast.loading('Creating account...', { duration: Infinity });
+				if (toastId) toast.dismiss(toastId);
+				toastId = toast.loading('Creating account...', { duration: Number.POSITIVE_INFINITY });
 				return toastId;
 			}
 			if (!result) return;
 			if (result instanceof Error) {
 				switch (result.cause) {
 					case 'EMAIL_ALREADY_EXISTS':
-						toast.error(result.message);
+						toastId = toast.error(result.message, { id: toastId });
 						break;
 					default:
 						console.error(result);
 				}
+			} else {
+				toast.success('Account created', { id: toastId });
 			}
 		});
-	});
-
-	onCleanup(() => {
-		if (toastId) toast.dismiss(toastId);
 	});
 
 	return (

@@ -4,11 +4,11 @@ import {
 	cookieStorageManagerSSR,
 	useColorMode
 } from '@kobalte/core/color-mode';
-import { Router } from '@solidjs/router';
+import { RouteSectionProps, Router, useBeforeLeave } from '@solidjs/router';
 import { FileRoutes } from '@solidjs/start/router';
 import { ErrorBoundary, Suspense } from 'solid-js';
 import { isServer } from 'solid-js/web';
-import { Toaster } from 'solid-sonner';
+import { Toaster, toast } from 'solid-sonner';
 import { getCookie } from 'vinxi/http';
 import 'virtual:uno.css';
 import Nav from '~/components/Nav';
@@ -19,29 +19,31 @@ function getServerCookies() {
 	return colorMode ? `kb-color-mode=${colorMode}` : '';
 }
 
-export default function App() {
+function RootLayout(props: RouteSectionProps) {
 	const storageManager = cookieStorageManagerSSR(isServer ? getServerCookies() : document.cookie);
+	useBeforeLeave(() => toast.dismiss());
 
 	return (
-		<Router
-			singleFlight={false}
-			root={(props) => (
-				<>
-					<ColorModeScript storageType={storageManager.type} />
-					<ColorModeProvider storageManager={storageManager}>
-						<ErrorBoundary fallback={(error) => <div>Error: {error.message}</div>}>
-							<Suspense>
-								<ColoredToaster />
-								<div class="flex h-full flex-col">
-									<Nav class="container mx-auto" />
-									<div class="container mx-auto h-full p-4">{props.children}</div>
-								</div>
-							</Suspense>
-						</ErrorBoundary>
-					</ColorModeProvider>
-				</>
-			)}
-		>
+		<>
+			<ColorModeScript storageType={storageManager.type} />
+			<ColorModeProvider storageManager={storageManager}>
+				<ErrorBoundary fallback={(error) => <div>Error: {error.message}</div>}>
+					<Suspense>
+						<ColoredToaster />
+						<div class="flex h-full flex-col">
+							<Nav class="container mx-auto" />
+							<div class="container mx-auto h-full p-4">{props.children}</div>
+						</div>
+					</Suspense>
+				</ErrorBoundary>
+			</ColorModeProvider>
+		</>
+	);
+}
+
+export default function App() {
+	return (
+		<Router singleFlight={false} root={RootLayout}>
 			<FileRoutes />
 		</Router>
 	);

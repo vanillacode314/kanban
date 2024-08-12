@@ -2,7 +2,7 @@ import { A, action, redirect, useSubmission } from '@solidjs/router';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
-import { Show, createEffect, createSignal, onCleanup, untrack } from 'solid-js';
+import { Show, createEffect, createSignal, untrack } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { toast } from 'solid-sonner';
 import { setCookie } from 'vinxi/http';
@@ -70,27 +70,26 @@ export default function SignInPage() {
 	let toastId: string | number | undefined;
 	createEffect(() => {
 		const { result, pending } = submission;
+
 		untrack(() => {
-			if (toastId) toast.dismiss(toastId);
 			if (pending) {
-				toastId = toast.loading('Logging in...', { duration: Infinity });
+				if (toastId) toast.dismiss(toastId);
+				toastId = toast.loading('Logging in...', { duration: Number.POSITIVE_INFINITY });
 				return;
 			}
 			if (!result) return;
 			if (result instanceof Error) {
 				switch (result.cause) {
 					case 'INVALID_CREDENTIALS':
-						toast.error(result.message);
+						toastId = toast.error(result.message, { id: toastId });
 						break;
 					default:
 						console.error(result);
 				}
+			} else {
+				toastId = toast.success('Login successful', { id: toastId });
 			}
 		});
-	});
-
-	onCleanup(() => {
-		if (toastId) toast.dismiss(toastId);
 	});
 
 	return (

@@ -1,5 +1,6 @@
 import { action } from '@solidjs/router';
 import { and, eq, gt, sql } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '~/db';
 import { type TBoard, type TTask, tasks } from '~/db/schema';
@@ -8,16 +9,16 @@ const moveTask = async (taskId: TTask['id'], toBoardId: TBoard['id'], index?: TT
 	'use server';
 	const event = getRequestEvent()!;
 	const user = event.locals.user;
-	if (!user) return new Error('Unauthorized');
+	if (!user) throw new Error('Unauthorized');
 
 	const [task] = await db
 		.select()
 		.from(tasks)
 		.where(and(eq(tasks.id, taskId), eq(tasks.userId, user.id)));
-	if (!task) return new Error('Task not found');
+	if (!task) throw new Error('Task not found');
 
 	if (task.boardId === toBoardId) {
-		if (!index) return new Error('Need index to move inside same board');
+		if (!index) throw new Error('Need index to move inside same board');
 	}
 
 	{
@@ -33,6 +34,7 @@ const moveTask = async (taskId: TTask['id'], toBoardId: TBoard['id'], index?: TT
 		.update(tasks)
 		.set({ boardId: toBoardId, index })
 		.where(and(eq(tasks.id, taskId), eq(tasks.userId, user.id)));
+	return task;
 };
 
 const createTask = action(async (formData: FormData) => {
@@ -43,7 +45,8 @@ const createTask = action(async (formData: FormData) => {
 	if (!user) return new Error('Unauthorized');
 
 	const title = String(formData.get('title'));
-	const boardId = Number(formData.get('boardId'));
+	const boardId = String(formData.get('boardId'));
+	const id = String(formData.get('id') ?? nanoid());
 
 	let index;
 	{
@@ -56,7 +59,7 @@ const createTask = action(async (formData: FormData) => {
 	}
 	const task = await db
 		.insert(tasks)
-		.values({ index, title, boardId, userId: user.id })
+		.values({ id, index, title, boardId, userId: user.id })
 		.returning();
 	return task;
 }, 'create-task');
@@ -68,7 +71,7 @@ const updateTask = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const id = Number(formData.get('id'));
+	const id = String(formData.get('id'));
 	const title = String(formData.get('title'));
 
 	const $task = await db
@@ -86,7 +89,7 @@ const deleteTask = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const taskId = Number(formData.get('id'));
+	const taskId = String(formData.get('id'));
 	await db.transaction(async (tx) => {
 		const [task] = await tx
 			.delete(tasks)

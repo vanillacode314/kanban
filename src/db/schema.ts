@@ -1,9 +1,13 @@
 import { InferSelectModel, sql } from 'drizzle-orm';
 import { integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
+import { createSelectSchema } from 'drizzle-valibot';
+import { nanoid } from 'nanoid';
 
 const refreshTokens = sqliteTable('refreshTokens', {
-	id: integer('id').notNull().primaryKey(),
-	userId: integer('userId')
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => nanoid()),
+	userId: text('userId')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
 	token: text('token').notNull(),
@@ -11,8 +15,10 @@ const refreshTokens = sqliteTable('refreshTokens', {
 });
 
 const verificationTokens = sqliteTable('verificationTokens', {
-	id: integer('id').notNull().primaryKey(),
-	userId: integer('userId')
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => nanoid()),
+	userId: text('userId')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
 	token: text('token').notNull(),
@@ -22,7 +28,9 @@ const verificationTokens = sqliteTable('verificationTokens', {
 });
 
 const users = sqliteTable('users', {
-	id: integer('id').notNull().primaryKey(),
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => nanoid()),
 	email: text('email').notNull().unique(),
 	passwordHash: text('passwordHash').notNull(),
 	emailVerified: integer('emailVerified', { mode: 'boolean' }).default(false),
@@ -32,32 +40,45 @@ const users = sqliteTable('users', {
 		.$onUpdateFn(() => new Date())
 });
 
-const boards = sqliteTable('boards', {
-	id: integer('id').notNull().primaryKey(),
-	title: text('title').notNull(),
-	createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(unixepoch('now'))`),
-	updatedAt: integer('updatedAt', { mode: 'timestamp' })
-		.default(sql`(unixepoch('now'))`)
-		.$onUpdateFn(() => new Date()),
-	userId: integer('userId')
-		.references(() => users.id, { onDelete: 'cascade' })
-		.notNull()
-});
-
-const tasks = sqliteTable(
-	'tasks',
+const boards = sqliteTable(
+	'boards',
 	{
-		id: integer('id').notNull().primaryKey(),
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => nanoid()),
 		title: text('title').notNull(),
 		index: integer('index').notNull(),
 		createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(unixepoch('now'))`),
 		updatedAt: integer('updatedAt', { mode: 'timestamp' })
 			.default(sql`(unixepoch('now'))`)
 			.$onUpdateFn(() => new Date()),
-		boardId: integer('boardId')
+		userId: text('userId')
+			.references(() => users.id, { onDelete: 'cascade' })
+			.notNull()
+	},
+	(table) => {
+		return {
+			unq: unique().on(table.index, table.userId)
+		};
+	}
+);
+
+const tasks = sqliteTable(
+	'tasks',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => nanoid()),
+		title: text('title').notNull(),
+		index: integer('index').notNull(),
+		createdAt: integer('createdAt', { mode: 'timestamp' }).default(sql`(unixepoch('now'))`),
+		updatedAt: integer('updatedAt', { mode: 'timestamp' })
+			.default(sql`(unixepoch('now'))`)
+			.$onUpdateFn(() => new Date()),
+		boardId: text('boardId')
 			.references(() => boards.id, { onDelete: 'cascade' })
 			.notNull(),
-		userId: integer('userId')
+		userId: text('userId')
 			.references(() => users.id, { onDelete: 'cascade' })
 			.notNull()
 	},
@@ -68,9 +89,22 @@ const tasks = sqliteTable(
 	}
 );
 
+const boardSchema = createSelectSchema(boards);
+const taskSchema = createSelectSchema(tasks);
+const usersSchema = createSelectSchema(users);
+
 type TBoard = InferSelectModel<typeof boards>;
 type TTask = InferSelectModel<typeof tasks>;
 type TUser = InferSelectModel<typeof users>;
 
-export { boards, refreshTokens, tasks, users, verificationTokens };
+export {
+	boards,
+	boardSchema,
+	refreshTokens,
+	tasks,
+	taskSchema,
+	users,
+	usersSchema,
+	verificationTokens
+};
 export type { TBoard, TTask, TUser };

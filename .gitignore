@@ -9,6 +9,7 @@ dist
 # Environment
 .env
 .env*.local
+.envrc
 
 # dependencies
 /node_modules
@@ -31,3 +32,4 @@ sqlite.db
 
 # Docker
 docker/database/
+

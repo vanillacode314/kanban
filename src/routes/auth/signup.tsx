@@ -110,14 +110,15 @@ export default function SignUpPage() {
 			if (result instanceof Error) {
 				switch (result.cause) {
 					case 'EMAIL_ALREADY_EXISTS':
-						toastId = toast.error(result.message, { id: toastId });
+						toast.error(result.message, { id: toastId, duration: 3000 });
 						break;
 					default:
 						console.error(result);
 				}
 			} else {
-				toast.success('Account created', { id: toastId });
+				toast.success('Account created', { id: toastId, duration: 3000 });
 			}
+			toastId = undefined;
 		});
 	});
 

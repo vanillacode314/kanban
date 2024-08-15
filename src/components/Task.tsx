@@ -1,16 +1,30 @@
+import { useAction } from '@solidjs/router';
 import { Component } from 'solid-js';
+import { toast } from 'solid-sonner';
+import { useApp } from '~/context/app';
 import { TBoard, TTask } from '~/db/schema';
-import { deleteTask, updateTask } from '~/db/utils/tasks';
-import BaseModal from './modals/BaseModal';
+import { deleteTask } from '~/db/utils/tasks';
+import { cn } from '~/lib/utils';
+import { useConfirmModal } from './modals/auto-import/ConfirmModal';
+import { setUpdateTaskModalOpen } from './modals/auto-import/UpdateTaskModal';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { TextField, TextFieldInput, TextFieldLabel } from './ui/text-field';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuShortcut,
+	DropdownMenuTrigger
+} from './ui/dropdown-menu';
 
-export const Task: Component<{ boardId: TBoard['id']; task: TTask }> = (props) => {
+export const Task: Component<{
+	boardId: TBoard['id'];
+	task: Pick<TTask, 'id' | 'title'>;
+	class?: string;
+}> = (props) => {
 	return (
 		<Card
-			class="grid grid-rows-[auto_auto] gap-2 rounded p-4"
+			class={cn('group/task flex items-center gap-2 rounded p-4', props.class)}
 			draggable="true"
 			onDragStart={(event) => {
 				if (!event.dataTransfer) throw new Error('No data transfer');
@@ -18,60 +32,67 @@ export const Task: Component<{ boardId: TBoard['id']; task: TTask }> = (props) =
 			}}
 		>
 			<span>{props.task.title}</span>
-			<div class="flex flex-wrap items-center justify-end gap-2">
-				<BaseModal
-					title="Update Task"
-					trigger={
-						<Button
-							as="div"
-							variant="outline"
-							class="flex items-center gap-2"
-							title="Update"
-							size="icon"
-						>
-							<span class="i-heroicons:pencil text-lg"></span>
-						</Button>
-					}
-				>
-					{(close) => (
-						<form action={updateTask} method="post" class="flex flex-col gap-4">
-							<input type="hidden" name="id" value={props.task.id} />
-							<TextField class="grid w-full items-center gap-1.5">
-								<TextFieldLabel for="title">Title</TextFieldLabel>
-								<TextFieldInput
-									type="text"
-									id="title"
-									name="title"
-									placeholder="Title"
-									value={props.task.title}
-								/>
-							</TextField>
-							<Button type="submit" class="self-end" onClick={() => close()}>
-								Submit
-							</Button>
-						</form>
-					)}
-				</BaseModal>
-				<form action={deleteTask} method="post">
-					<input type="hidden" value={props.task.id} name="id" />
-					<Tooltip>
-						<TooltipTrigger
-							as={Button}
-							variant="destructive"
-							class="flex items-center gap-2"
-							type="submit"
-							size="icon"
-						>
-							<span class="i-heroicons:trash text-lg"></span>
-						</TooltipTrigger>
-						<TooltipContent>
-							<span>Delete</span>
-						</TooltipContent>
-					</Tooltip>
-				</form>
-			</div>
+			<span class="grow" />
+			<TaskContextMenu
+				task={props.task}
+				class="pointer-events-none opacity-0 transition-opacity group-hover/task:pointer-events-auto group-hover/task:opacity-100"
+			/>
 		</Card>
 	);
 };
 
+function TaskContextMenu(props: { task: Pick<TTask, 'id' | 'title'>; class?: string }) {
+	const [_appContext, setAppContext] = useApp();
+	const confirmModal = useConfirmModal();
+	const $deleteTask = useAction(deleteTask);
+
+	return (
+		<div class={cn('flex-col', props.class)}>
+			<DropdownMenu>
+				<DropdownMenuTrigger as={Button<'button'>} size="icon" variant="ghost">
+					<span class="i-heroicons:ellipsis-vertical text-lg"></span>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent class="w-48">
+					<DropdownMenuItem
+						as="button"
+						class="w-full"
+						onClick={() => {
+							setAppContext('currentTask', props.task);
+							setUpdateTaskModalOpen(true);
+						}}
+					>
+						<span>Edit</span>
+						<DropdownMenuShortcut>
+							<span class="i-heroicons:pencil-solid"></span>
+						</DropdownMenuShortcut>
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						as="button"
+						class="w-full"
+						onClick={() => {
+							confirmModal.open({
+								title: 'Delete Task',
+								message: 'Are you sure you want to delete this task?',
+								onYes: async () => {
+									const formData = new FormData();
+									formData.set('id', props.task.id.toString());
+									toast.promise(() => $deleteTask(formData), {
+										loading: 'Deleting Task',
+										success: 'Deleted Task',
+										error: 'Error'
+									});
+								}
+							});
+						}}
+					>
+						<span>Delete</span>
+						<DropdownMenuShortcut>
+							<span class="i-heroicons:trash"></span>
+						</DropdownMenuShortcut>
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+		</div>
+	);
+}
 export default Task;

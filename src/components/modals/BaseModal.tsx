@@ -1,11 +1,22 @@
-import { JSXElement, createEffect, createSignal, createUniqueId } from 'solid-js';
+import {
+	JSXElement,
+	Show,
+	children,
+	createEffect,
+	createSignal,
+	createUniqueId,
+	mergeProps,
+	untrack
+} from 'solid-js';
 import { Portal } from 'solid-js/web';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 
 type Props =
 	| {
 			title: string;
 			children: (close: () => void) => JSXElement;
 			trigger: JSXElement;
+			id?: string;
 	  }
 	| {
 			title: string;
@@ -13,44 +24,62 @@ type Props =
 			trigger?: JSXElement;
 			open: boolean;
 			setOpen: (open: boolean) => void;
+			id?: string;
 	  };
 
 export function Modal(props: Props) {
-	const [internalOpen, setInternalOpen] = createSignal(false);
+	const internalId = createUniqueId();
+	const [internalOpen, setInternalOpen] = createSignal<boolean>(false);
+	const mergedProps = mergeProps(
+		{
+			get open() {
+				return internalOpen();
+			},
+			id: internalId,
+			setOpen: setInternalOpen
+		},
+		props
+	);
 
 	const [el, setEl] = createSignal<HTMLDialogElement>();
 
-	const id = createUniqueId();
-
-	const open = () => ('open' in props ? props.open : internalOpen());
-	const setOpen = (value: boolean) =>
-		'open' in props ? props.setOpen(value) : setInternalOpen(value);
+	const trigger = children(() => props.trigger);
 
 	createEffect(() => {
-		if (open()) el()?.showModal();
-		else el()?.close();
+		const { open } = mergedProps;
+		untrack(() => {
+			if (open) {
+				el()?.showPopover();
+			} else {
+				el()?.hidePopover();
+			}
+		});
 	});
 
 	return (
 		<>
-			<button popovertarget={id} data-debug={props.title}>
-				{props.trigger}
-			</button>
+			<Show when={trigger()}>
+				<button popovertarget={mergedProps.id} class="contents">
+					{trigger()}
+				</button>
+			</Show>
 			<Portal>
 				<dialog
-					id={id}
+					id={mergedProps.id}
 					ref={setEl}
 					popover
-					onClick={(event) => {
-						const target = event.target as HTMLDialogElement;
-						target !== el();
-						if (target === el()) el()?.close();
+					onToggle={(event) => {
+						mergedProps.setOpen(event.newState === 'open');
 					}}
-					onClose={() => setOpen(false)}
-					class="min-w-80 rounded-lg border bg-background p-4"
 				>
-					<h4 class="mb-2 text-lg font-medium">{props.title}</h4>
-					<div>{props.children(() => el()?.hidePopover())}</div>
+					<Card>
+						<CardHeader>
+							<CardTitle>{props.title}</CardTitle>
+						</CardHeader>
+						<CardContent>
+							<div>{props.children(() => mergedProps.setOpen(false))}</div>
+						</CardContent>
+					</Card>
 				</dialog>
 			</Portal>
 		</>

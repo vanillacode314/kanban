@@ -108,6 +108,7 @@
 	:root,
 	body,
 	#app {
+		overflow: hidden;
 		height: 100%;
 	}
 	*::backdrop {
@@ -151,6 +152,10 @@
 
 	.box {
 		display: -webkit-box;
+	}
+
+	.touch-none {
+		touch-action: none;
 	}
 }
 *::-webkit-scrollbar-track {

@@ -81,14 +81,15 @@ export default function SignInPage() {
 			if (result instanceof Error) {
 				switch (result.cause) {
 					case 'INVALID_CREDENTIALS':
-						toastId = toast.error(result.message, { id: toastId });
+						toast.error(result.message, { id: toastId, duration: 3000 });
 						break;
 					default:
 						console.error(result);
 				}
 			} else {
-				toastId = toast.success('Login successful', { id: toastId });
+				toast.success('Login successful', { id: toastId, duration: 3000 });
 			}
+			toastId = undefined;
 		});
 	});
 

@@ -31,6 +31,7 @@ export const Task: Component<{
 				event.dataTransfer.setData('text/plain', String(props.task.id));
 			}}
 		>
+			<span class="i-akar-icons:drag-vertical-fill cursor-move touch-none transition-opacity" />
 			<span>{props.task.title}</span>
 			<span class="grow" />
 			<TaskContextMenu

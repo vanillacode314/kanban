@@ -1,4 +1,3 @@
-import { trackDeep } from '@solid-primitives/deep';
 import { Key } from '@solid-primitives/keyed';
 import { animate, spring } from 'motion';
 import {
@@ -6,21 +5,14 @@ import {
 	children,
 	createContext,
 	createEffect,
-	For,
 	JSXElement,
-	onMount,
 	untrack,
 	useContext
 } from 'solid-js';
 import { createStore, produce, SetStoreFunction } from 'solid-js/store';
-import { isServer } from 'solid-js/web';
-
-const HTMLElement = (isServer
-	? class {}
-	: window.HTMLElement) as unknown as typeof window.HTMLElement;
 
 type TDragItem = { id: string | number };
-type TDragContext<T extends TDragItem> = {
+type TDragContext = {
 	orientation: 'horizontal' | 'vertical';
 	items: Array<{
 		element: HTMLElement;
@@ -30,19 +22,20 @@ type TDragContext<T extends TDragItem> = {
 		height: number;
 		offsetLeft: number;
 		offsetTop: number;
-		centerX: number;
-		centerY: number;
+		readonly centerX: number;
+		readonly centerY: number;
 		dragIndex: number;
 	}>;
 };
-type TDragContextValue<T extends TDragItem> = [
-	TDragContext<T>,
+type TDragContextValue = [
+	TDragContext,
 	{
-		setDragContext: SetStoreFunction<TDragContext<T>>;
+		setDragContext: SetStoreFunction<TDragContext>;
 		updateIndex: (currentIndex: number, newIndex: number) => void;
+		getNewDragIndex: (currentIndex: number) => number;
 	}
 ];
-const DragContext = createContext<TDragContextValue<any>>();
+const DragContext = createContext<TDragContextValue>();
 
 function useDrag() {
 	const value = useContext(DragContext);
@@ -55,7 +48,7 @@ function DragProvider<T extends Array<TDragItem>>(props: {
 	data: T;
 	orientation: 'horizontal' | 'vertical';
 }) {
-	const [dragContext, setDragContext] = createStore<TDragContext<T[number]>>({
+	const [dragContext, setDragContext] = createStore<TDragContext>({
 		items: [],
 		orientation: props.orientation
 	});
@@ -114,8 +107,14 @@ function DragProvider<T extends Array<TDragItem>>(props: {
 								index === currentIndex - 1
 									? currentItem
 									: items.find((item) => item.dragIndex === index + 1)!;
-							const dx = nextItem.centerX - item.centerX;
-							item.offsetLeft += dx;
+							let dx: number;
+							if (dragContext.orientation === 'horizontal') {
+								dx = nextItem.centerX - item.centerX;
+								item.offsetLeft += dx;
+							} else {
+								dx = nextItem.centerY - item.centerY;
+								item.offsetTop += dx;
+							}
 							totalOffset -= dx;
 							item.dragIndex += 1;
 							queueMicrotask(() => {
@@ -141,8 +140,14 @@ function DragProvider<T extends Array<TDragItem>>(props: {
 									index === currentIndex + 1
 										? currentItem
 										: items.find((item) => item.dragIndex === index - 1)!;
-								const dx = prevItem.centerX - item.centerX;
-								item.offsetLeft += dx;
+								let dx: number;
+								if (dragContext.orientation === 'horizontal') {
+									dx = prevItem.centerX - item.centerX;
+									item.offsetLeft += dx;
+								} else {
+									dx = prevItem.centerY - item.centerY;
+									item.offsetTop += dx;
+								}
 								totalOffset -= dx;
 								item.dragIndex -= 1;
 								queueMicrotask(() => {
@@ -159,53 +164,72 @@ function DragProvider<T extends Array<TDragItem>>(props: {
 				currentItem = items.find((item) => item.dragIndex === newIndex)!;
 				if (dragContext.orientation === 'horizontal') {
 					currentItem.offsetLeft += totalOffset;
+				} else {
+					currentItem.offsetTop += totalOffset;
 				}
 			})
 		);
 	};
 
+	function getNewDragIndex(currentIndex: number) {
+		const currentItem = dragContext.items[currentIndex];
+		const { top, left, width, height } = currentItem.element.getBoundingClientRect();
+		const currentCenter = { x: left + width / 2, y: top + height / 2 };
+		if (!currentItem) throw new Error('No current item');
+
+		let newIndex: number = currentItem.dragIndex;
+		for (const item of dragContext.items) {
+			if (item === currentItem) continue;
+
+			const index = item.dragIndex;
+			const nextItem = dragContext.items.find((item) => item.dragIndex === index + 1);
+			const isFirstElement = index === 0;
+			const isMiddleElement = index > 0 && index < dragContext.items.length - 1;
+			const isLastElement = index === dragContext.items.length - 1;
+
+			if (dragContext.orientation === 'horizontal') {
+				if (isFirstElement && currentCenter.x < item.centerX) {
+					newIndex = index;
+					break;
+				} else if (isLastElement && currentCenter.x > item.centerX) {
+					newIndex = index;
+					break;
+				} else if (
+					isMiddleElement &&
+					currentCenter.x >= item.centerX &&
+					currentCenter.x < nextItem!.centerX
+				) {
+					newIndex = index;
+					break;
+				}
+			} else {
+				if (isFirstElement && currentCenter.y < item.centerY) {
+					newIndex = index;
+					break;
+				} else if (isLastElement && currentCenter.y > item.centerY) {
+					newIndex = index;
+					break;
+				} else if (
+					isMiddleElement &&
+					currentCenter.y >= item.centerY &&
+					currentCenter.y < nextItem!.centerY
+				) {
+					newIndex = index;
+					break;
+				}
+			}
+		}
+		return newIndex;
+	}
+
 	return (
-		<DragContext.Provider value={[dragContext, { setDragContext, updateIndex }]}>
+		<DragContext.Provider value={[dragContext, { setDragContext, updateIndex, getNewDragIndex }]}>
 			<Key each={props.data as T} by={(item) => item.id}>
-				{(item, index) => (
-					<DragItem index={index()} data={item()}>
-						{props.children(item, index)}
-					</DragItem>
-				)}
+				{(item, index) => <DragItem index={index()}>{props.children(item, index)}</DragItem>}
 			</Key>
 		</DragContext.Provider>
 	);
 }
 
-function getNewIndex(currentIndex: number, items: TDragContext<any>['items']) {
-	const currentItem = items[currentIndex];
-	const { top, left, width, height } = currentItem.element.getBoundingClientRect();
-	const currentCenter = { x: left + width / 2, y: top + height / 2 };
-	if (!currentItem) throw new Error('No current item');
-
-	let newIndex: number = currentItem.dragIndex;
-	for (const item of items) {
-		const index = item.dragIndex;
-		if (item === currentItem) continue;
-		const nextItem = items.find((item) => item.dragIndex === index + 1);
-		if (index === 0 && currentCenter.x < item.centerX) {
-			newIndex = index;
-			break;
-		} else if (index === items.length - 1 && currentCenter.x > item.centerX) {
-			newIndex = index;
-			break;
-		} else if (
-			index > 0 &&
-			index < items.length - 1 &&
-			currentCenter.x >= item.centerX &&
-			currentCenter.x < nextItem!.centerX
-		) {
-			newIndex = index;
-			break;
-		}
-	}
-	return newIndex;
-}
-
-export { DragProvider, getNewIndex, useDrag };
+export { DragProvider, useDrag };
 export type { TDragContext, TDragContextValue };

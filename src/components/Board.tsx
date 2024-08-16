@@ -14,7 +14,7 @@ import {
 	DropdownMenuTrigger
 } from '~/components/ui/dropdown-menu';
 import { useApp } from '~/context/app';
-import { getNewIndex, useDrag } from '~/context/drag';
+import { useDrag } from '~/context/drag';
 import { TBoard, TTask } from '~/db/schema';
 import { deleteBoard, getBoards, moveBoard } from '~/db/utils/boards';
 import { createTask, moveTask } from '~/db/utils/tasks';
@@ -39,7 +39,7 @@ export const Board: Component<{
 	board: TBoard & { tasks: TTask[] };
 	index: number;
 }> = (props) => {
-	const [dragContext, { setDragContext, updateIndex }] = useDrag();
+	const [dragContext, { getNewDragIndex, updateIndex }] = useDrag();
 	const [boardElement, setBoardElement] = createSignal<HTMLDivElement>();
 	let dragHandleEl!: HTMLElement;
 	const submission = useSubmissions(createTask);
@@ -59,31 +59,15 @@ export const Board: Component<{
 	const tasks = () =>
 		uniqBy(props.board.tasks ? [...props.board.tasks, ...pendingTasks()] : [], (task) => task.id);
 
-	function getCenterCoords(
-		element: HTMLElement,
-		{ removeOffset = false }: { removeOffset?: boolean } = {}
-	): [number, number] {
-		const { left, top, width, height } = element.getBoundingClientRect();
-		let [offsetX, offsetY] = [0, 0];
-		if (removeOffset)
-			[offsetX, offsetY] = [
-				element.style.getPropertyValue('--motion-translateX'),
-				element.style.getPropertyValue('--motion-translateY')
-			].map((value) => {
-				return value === '' ? 0 : Number(value.replace('px', ''));
-			});
-		return [left + width / 2 - offsetX, top + height / 2 - offsetY];
-	}
-
 	createEffect(() => {
 		const currentItem = dragContext.items.find((item) => item.element === boardElement())!;
 		if (!currentItem) return;
 
 		const gesture = untrack(() => {
 			let offset = [0, 0];
-			return new DragGesture(dragHandleEl, ({ movement: [mx, my], xy: [x, y], down, memo }) => {
+			return new DragGesture(dragHandleEl, ({ movement: [mx, my], down }) => {
 				if (down) {
-					const newIndex = getNewIndex(props.index, dragContext.items);
+					const newIndex = getNewDragIndex(props.index);
 					if (newIndex !== currentItem.dragIndex) updateIndex(currentItem.dragIndex, newIndex);
 					currentItem.element.classList.add('z-20');
 					const animation = animate(
@@ -146,12 +130,12 @@ export const Board: Component<{
 			}}
 		>
 			<CardHeader>
-				<div class="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-					<CardTitle>{props.board.title}</CardTitle>
+				<div class="grid grid-cols-[auto_1fr_1fr] items-center gap-4">
 					<span
-						class="i-akar-icons:drag-horizontal-fill cursor-move touch-none opacity-0 transition-opacity group-hover/board:opacity-100"
+						class="i-akar-icons:drag-vertical-fill cursor-move touch-none transition-opacity"
 						ref={dragHandleEl}
 					/>
+					<CardTitle>{props.board.title}</CardTitle>
 					<div class="flex items-center justify-end gap-2">
 						<Button
 							class="flex items-center gap-2"

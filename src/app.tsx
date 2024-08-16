@@ -45,33 +45,11 @@ function RootLayout(props: RouteSectionProps) {
 							<Nav class="full-width content-grid" />
 							<div class="content-grid h-full">{props.children}</div>
 						</div>
-						<MouseCoords />
 						<AutoImportModals />
 					</AppContextProvider>
 				</ColorModeProvider>
 			</Suspense>
 		</>
-	);
-}
-
-function MouseCoords() {
-	const [pos, setPos] = createStore({ x: 0, y: 0 });
-	onMount(() => {
-		document.addEventListener('mousemove', (e) => {
-			setPos({ x: e.clientX, y: e.clientY });
-		});
-	});
-	return (
-		<p
-			class="pointer-events-none absolute rounded bg-white p-1 text-sm font-bold uppercase text-black"
-			style={{
-				transform: 'translate(-100%, -100%)',
-				left: `${pos.x}px`,
-				top: `${pos.y}px`
-			}}
-		>
-			{pos.x}, {pos.y}
-		</p>
 	);
 }
 

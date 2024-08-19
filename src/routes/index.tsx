@@ -1,14 +1,9 @@
 import { Key } from '@solid-primitives/keyed';
 import { createAsync, useSubmissions } from '@solidjs/router';
-import * as v from '@valibot/valibot';
-import { animate, spring } from 'motion';
-import { createEffect, createRenderEffect, untrack } from 'solid-js';
-import { createStore, produce, unwrap } from 'solid-js/store';
 import Board from '~/components/Board';
 import { setCreateBoardModalOpen } from '~/components/modals/auto-import/CreateBoardModal';
 import { Button } from '~/components/ui/button';
-import { DragContextProvider, DragProvider, TDragContext, dragContextSchema } from '~/context/drag';
-import { TBoard, TTask } from '~/db/schema';
+import { DragProvider } from '~/context/drag';
 import { createBoard, getBoards } from '~/db/utils/boards';
 
 export const route = {
@@ -35,23 +30,23 @@ export default function Home() {
 	const boards = () => (serverBoards() ? [...serverBoards()!, ...pendingBoards()] : []);
 
 	return (
-		<div class="flex h-full flex-col gap-4 py-4">
+		<div class="flex h-full flex-col gap-4 overflow-hidden py-4">
 			<div class="flex justify-end gap-4">
 				<Button class="flex items-center gap-2" onClick={() => setCreateBoardModalOpen(true)}>
 					<span class="i-heroicons:plus text-lg"></span>
 					<span>Create Board</span>
 				</Button>
 			</div>
-			<div class="grid h-full grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
-				<DragProvider data={boards()} orientation="horizontal">
+			<div class="flex h-full snap-x snap-mandatory gap-[var(--gap)] overflow-auto overflow-hidden [--cols:1] [--gap:theme(spacing.4)] sm:[--cols:2] md:[--cols:3]">
+				<Key each={boards()} by="id">
 					{(board, index) => (
 						<Board
-							// @ts-ignore: TODO: Fix this
+							class="shrink-0 basis-[calc((100%-(var(--cols)-1)*var(--gap))/var(--cols))] snap-start"
 							board={board()}
 							index={index()}
 						/>
 					)}
-				</DragProvider>
+				</Key>
 			</div>
 		</div>
 	);

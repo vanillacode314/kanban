@@ -1,28 +1,24 @@
-import * as v from '@valibot/valibot';
 import { createContext, JSXElement, useContext } from 'solid-js';
 import { createStore, SetStoreFunction } from 'solid-js/store';
-import { boardSchema, taskSchema } from '~/db/schema';
+import { TBoard, TTask } from '~/db/schema';
 
-const appContextSchema = v.optional(
-	v.object({
-		currentBoard: v.nullish(boardSchema, null),
-		currentTask: v.nullish(taskSchema, null)
-	}),
-	{}
-);
-type TAppContext = v.InferOutput<typeof appContextSchema>;
+const DEFAULT_APP_CONTEXT = {
+	currentBoard: null,
+	currentTask: null
+} satisfies TAppContext;
+type TAppContext = { currentBoard: null | TBoard; currentTask: null | TTask };
 const AppContext =
 	createContext<[appContext: TAppContext, setAppContext: SetStoreFunction<TAppContext>]>();
 
 function useApp() {
 	const value = useContext(AppContext);
-	if (!value) throw new Error('useApp must be used within an AppContextProvider');
+	if (!value) throw new Error('useApp must be used within an AppProvider');
 	return value;
 }
 
-function AppContextProvider(props: { children: JSXElement }) {
+function AppProvider(props: { children: JSXElement }) {
 	const [appContext, setAppContext] = createStore<TAppContext>(
-		v.parse(appContextSchema, undefined)
+		structuredClone(DEFAULT_APP_CONTEXT)
 	);
 
 	return (
@@ -30,4 +26,4 @@ function AppContextProvider(props: { children: JSXElement }) {
 	);
 }
 
-export { AppContextProvider, useApp };
+export { AppProvider, useApp };

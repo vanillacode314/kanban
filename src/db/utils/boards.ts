@@ -40,12 +40,12 @@ const moveBoard = async (boardId: TBoard['id'], toIndex: TBoard['index']) => {
 	const user = event.locals.user;
 	if (!user) throw new Error('Unauthorized');
 
-	const board = await db
+	const [board] = await db
 		.select()
 		.from(boards)
 		.where(and(eq(boards.id, boardId), eq(boards.userId, user.id)));
 
-	const fromIndex = board[0].index;
+	const fromIndex = board.index;
 	if (fromIndex === toIndex) throw new Error(`Can't move board to same index`);
 	await db.transaction(async (tx) => {
 		if (fromIndex > toIndex) {
@@ -68,6 +68,43 @@ const moveBoard = async (boardId: TBoard['id'], toIndex: TBoard['index']) => {
 			.set({ index: toIndex })
 			.where(and(eq(boards.userId, user.id), eq(boards.id, boardId)));
 	});
+};
+
+const shiftBoard = async (boardId: TBoard['id'], direction: 1 | -1) => {
+	'use server';
+
+	const event = getRequestEvent()!;
+	const user = event.locals.user;
+	if (!user) throw new Error('Unauthorized');
+
+	const [board] = await db
+		.select({ index: boards.index })
+		.from(boards)
+		.where(and(eq(boards.id, boardId), eq(boards.userId, user.id)));
+
+	if (direction === 1) {
+		const [{ maxIndex }] = await db
+			.select({ maxIndex: sql<number>`max(${boards.index})` })
+			.from(boards)
+			.where(eq(boards.userId, user.id));
+		if (maxIndex === board.index) throw new Error('Can not shift last board');
+	} else if (0 === board.index) {
+		throw new Error('Can not shift first board');
+	}
+	await db.batch([
+		db
+			.update(boards)
+			.set({ index: board.index + direction + 10000 })
+			.where(and(eq(boards.id, boardId), eq(boards.userId, user.id))),
+		db
+			.update(boards)
+			.set({ index: board.index })
+			.where(and(eq(boards.index, board.index + direction), eq(boards.userId, user.id))),
+		db
+			.update(boards)
+			.set({ index: board.index + direction })
+			.where(and(eq(boards.id, boardId), eq(boards.userId, user.id)))
+	]);
 };
 
 const createBoard = action(async (formData: FormData) => {
@@ -137,4 +174,4 @@ const deleteBoard = action(async (formData: FormData) => {
 	});
 }, 'delete-board');
 
-export { createBoard, deleteBoard, getBoards, moveBoard, updateBoard };
+export { createBoard, deleteBoard, getBoards, moveBoard, shiftBoard, updateBoard };

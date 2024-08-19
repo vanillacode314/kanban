@@ -14,7 +14,7 @@ import { getCookie } from 'vinxi/http';
 import 'virtual:uno.css';
 import Nav from '~/components/Nav';
 import './app.css';
-import { AppContextProvider } from './context/app';
+import { AppProvider } from './context/app';
 function getServerCookies() {
 	'use server';
 	const colorMode = getCookie('kb-color-mode');
@@ -39,14 +39,14 @@ function RootLayout(props: RouteSectionProps) {
 			<Suspense>
 				<ColorModeScript storageType={storageManager.type} />
 				<ColorModeProvider storageManager={storageManager}>
-					<AppContextProvider>
+					<AppProvider>
 						<ColoredToaster />
-						<div class="flex h-full flex-col">
+						<div class="flex h-full flex-col overflow-hidden">
 							<Nav class="full-width content-grid" />
-							<div class="content-grid h-full">{props.children}</div>
+							<div class="content-grid h-full overflow-hidden">{props.children}</div>
 						</div>
 						<AutoImportModals />
-					</AppContextProvider>
+					</AppProvider>
 				</ColorModeProvider>
 			</Suspense>
 		</>

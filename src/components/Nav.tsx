@@ -98,7 +98,10 @@ function VerificationEmailAlert(props: {
 						}}
 						disabled={cooldown() > 0}
 					>
-						Send Again {cooldown() > 0 ? <>(Wait {cooldown()}s)</> : ''}
+						Send Again{' '}
+						{cooldown() > 0 ?
+							<>(Wait {cooldown()}s)</>
+						:	''}
 					</Button>
 				</div>
 			</Alert>

@@ -37,7 +37,7 @@ const RootLayout = (props: RouteSectionProps) => {
 	useBeforeLeave(() => toast.dismiss());
 
 	return (
-		<Suspense>
+		<>
 			<ColorModeScript storageType={storageManager.type} />
 			<ColorModeProvider storageManager={storageManager}>
 				<AppProvider path={path()}>
@@ -49,13 +49,20 @@ const RootLayout = (props: RouteSectionProps) => {
 					<AutoImportModals />
 				</AppProvider>
 			</ColorModeProvider>
-		</Suspense>
+		</>
 	);
 };
 
 export default function App() {
 	return (
-		<Router singleFlight={false} root={RootLayout}>
+		<Router
+			singleFlight={false}
+			root={(props) => (
+				<Suspense>
+					<RootLayout {...props} />
+				</Suspense>
+			)}
+		>
 			<FileRoutes />
 		</Router>
 	);

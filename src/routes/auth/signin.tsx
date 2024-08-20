@@ -52,13 +52,15 @@ const signIn = action(async (formData: FormData) => {
 		httpOnly: true,
 		secure: true,
 		path: '/',
-		sameSite: 'lax'
+		sameSite: 'lax',
+		maxAge: 1000000000000000
 	});
 	setCookie(event.nativeEvent, 'refreshToken', refreshToken, {
 		httpOnly: true,
 		secure: true,
 		path: '/',
-		sameSite: 'lax'
+		sameSite: 'lax',
+		maxAge: 1000000000000000
 	});
 	return redirect('/');
 }, 'signin');

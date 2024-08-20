@@ -6,8 +6,7 @@ import {
 } from '@kobalte/core/color-mode';
 import { RouteSectionProps, Router, useBeforeLeave, useLocation } from '@solidjs/router';
 import { FileRoutes } from '@solidjs/start/router';
-import { For, JSXElement, Suspense, createEffect, createMemo, onMount } from 'solid-js';
-import { createStore } from 'solid-js/store';
+import { For, JSXElement, Suspense } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { Toaster, toast } from 'solid-sonner';
 import { getCookie } from 'vinxi/http';
@@ -15,6 +14,7 @@ import 'virtual:uno.css';
 import Nav from '~/components/Nav';
 import './app.css';
 import { AppProvider } from './context/app';
+
 function getServerCookies() {
 	'use server';
 	const colorMode = getCookie('kb-color-mode');
@@ -30,30 +30,28 @@ function AutoImportModals() {
 	return <For each={Object.values(modals)}>{(Modal) => <Modal />}</For>;
 }
 
-function RootLayout(props: RouteSectionProps) {
+const RootLayout = (props: RouteSectionProps) => {
 	const location = useLocation();
 	const path = () => location.pathname;
 	const storageManager = cookieStorageManagerSSR(isServer ? getServerCookies() : document.cookie);
 	useBeforeLeave(() => toast.dismiss());
 
 	return (
-		<>
-			<Suspense>
-				<ColorModeScript storageType={storageManager.type} />
-				<ColorModeProvider storageManager={storageManager}>
-					<AppProvider path={path()}>
-						<ColoredToaster />
-						<div class="flex h-full flex-col overflow-hidden">
-							<Nav class="full-width content-grid" />
-							<div class="content-grid h-full overflow-hidden">{props.children}</div>
-						</div>
-						<AutoImportModals />
-					</AppProvider>
-				</ColorModeProvider>
-			</Suspense>
-		</>
+		<Suspense>
+			<ColorModeScript storageType={storageManager.type} />
+			<ColorModeProvider storageManager={storageManager}>
+				<AppProvider path={path()}>
+					<ColoredToaster />
+					<div class="flex h-full flex-col overflow-hidden">
+						<Nav class="full-width content-grid" />
+						<div class="content-grid h-full overflow-hidden">{props.children}</div>
+					</div>
+					<AutoImportModals />
+				</AppProvider>
+			</ColorModeProvider>
+		</Suspense>
 	);
-}
+};
 
 export default function App() {
 	return (

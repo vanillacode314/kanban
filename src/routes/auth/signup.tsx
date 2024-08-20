@@ -71,14 +71,14 @@ const signUp = action(async (formData: FormData) => {
 		secure: true,
 		path: '/',
 		sameSite: 'lax',
-		maxAge: 1000000000000000
+		maxAge: 2 ** 31
 	});
 	setCookie(event.nativeEvent, 'refreshToken', refreshToken, {
 		httpOnly: true,
 		secure: true,
 		path: '/',
 		sameSite: 'lax',
-		maxAge: 1000000000000000
+		maxAge: 2 ** 31
 	});
 
 	await resend.emails.send({

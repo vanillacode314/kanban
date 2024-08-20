@@ -4,18 +4,21 @@ import { nanoid } from 'nanoid';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '~/db';
 import { type TBoard, type TTask, boards, tasks } from '~/db/schema';
+import { getNodes } from './nodes';
 
-const getBoards = cache(async () => {
+const getBoards = cache(async (path: string) => {
 	'use server';
 
 	const event = getRequestEvent()!;
 	const user = event.locals.user;
 	if (!user) throw new Error('Unauthorized');
 
+	const { node } = await getNodes(path);
+
 	const rows = await db
 		.select()
 		.from(boards)
-		.where(eq(boards.userId, user.id))
+		.where(and(eq(boards.userId, user.id), eq(boards.nodeId, node.id)))
 		.leftJoin(tasks, and(eq(boards.id, tasks.boardId)))
 		.orderBy(asc(boards.index), asc(tasks.index));
 
@@ -116,19 +119,22 @@ const createBoard = action(async (formData: FormData) => {
 
 	const title = String(formData.get('title'));
 	const id = String(formData.get('id') ?? nanoid());
+	const path = String(formData.get('path'));
+
+	const { node } = await getNodes(path);
 
 	let index;
 	{
 		const [board] = await db
 			.select({ maxIndex: sql<number>`max(${boards.index})` })
 			.from(boards)
-			.where(eq(boards.userId, user.id));
+			.where(and(eq(boards.userId, user.id), eq(boards.nodeId, node.id)));
 		if (!board) index = 0;
 		else index = board.maxIndex + 1;
 	}
 	const $board = await db
 		.insert(boards)
-		.values({ id, index, title: title, userId: user.id })
+		.values({ id, index, title: title, userId: user.id, nodeId: node.id })
 		.returning();
 
 	return $board;

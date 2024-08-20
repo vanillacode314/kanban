@@ -1,17 +1,24 @@
 import { Key } from '@solid-primitives/keyed';
-import { createAsync, useSubmissions } from '@solidjs/router';
+import { createAsync, useLocation, useSubmissions } from '@solidjs/router';
 import Board from '~/components/Board';
 import { setCreateBoardModalOpen } from '~/components/modals/auto-import/CreateBoardModal';
 import { Button } from '~/components/ui/button';
-import { DragProvider } from '~/context/drag';
+import { useApp } from '~/context/app';
 import { createBoard, getBoards } from '~/db/utils/boards';
 
 export const route = {
-	preload: () => getBoards()
+	preload: () => {
+		const location = useLocation();
+		getBoards(location.pathname);
+	},
+	matchFilters: {
+		project: (value: string) => value.endsWith('.project')
+	}
 };
 
 export default function Home() {
-	const serverBoards = createAsync(() => getBoards());
+	const [appContext, _setAppContext] = useApp();
+	const serverBoards = createAsync(() => getBoards(appContext.path));
 	const submissions = useSubmissions(createBoard);
 
 	const pendingBoards = () =>
@@ -37,7 +44,7 @@ export default function Home() {
 					<span>Create Board</span>
 				</Button>
 			</div>
-			<div class="flex h-full snap-x snap-mandatory gap-[var(--gap)] overflow-auto overflow-hidden [--cols:1] [--gap:theme(spacing.4)] sm:[--cols:2] md:[--cols:3]">
+			<div class="flex h-full snap-x snap-mandatory gap-[var(--gap)] overflow-auto [--cols:1] [--gap:theme(spacing.4)] sm:[--cols:2] md:[--cols:3]">
 				<Key each={boards()} by="id">
 					{(board, index) => (
 						<Board

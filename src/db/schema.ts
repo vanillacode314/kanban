@@ -1,5 +1,5 @@
 import { InferSelectModel, sql } from 'drizzle-orm';
-import { integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
+import { AnySQLiteColumn, integer, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
 import { nanoid } from 'nanoid';
 
 const refreshTokens = sqliteTable('refreshTokens', {
@@ -53,11 +53,14 @@ const boards = sqliteTable(
 			.$onUpdateFn(() => new Date()),
 		userId: text('userId')
 			.references(() => users.id, { onDelete: 'cascade' })
+			.notNull(),
+		nodeId: text('nodeId')
+			.references(() => nodes.id, { onDelete: 'cascade' })
 			.notNull()
 	},
 	(table) => {
 		return {
-			unq: unique().on(table.index, table.userId)
+			unq: unique().on(table.index, table.userId, table.nodeId)
 		};
 	}
 );
@@ -88,9 +91,36 @@ const tasks = sqliteTable(
 	}
 );
 
+const nodes = sqliteTable(
+	'nodes',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => nanoid()),
+		name: text('name').notNull(),
+		parentId: text('parentId').references((): AnySQLiteColumn => nodes.id, {
+			onDelete: 'cascade'
+		}),
+		userId: text('userId')
+			.notNull()
+			.references(() => users.id, { onDelete: 'cascade' }),
+		createdAt: integer('createdAt', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch('now'))`),
+		updatedAt: integer('updatedAt', { mode: 'timestamp' })
+			.notNull()
+			.default(sql`(unixepoch('now'))`)
+			.$onUpdate(() => new Date())
+	},
+	(t) => ({
+		unq: unique().on(t.name, t.parentId, t.userId)
+	})
+);
+
 type TBoard = InferSelectModel<typeof boards>;
 type TTask = InferSelectModel<typeof tasks>;
 type TUser = InferSelectModel<typeof users>;
+type TNode = InferSelectModel<typeof nodes>;
 
-export { boards, refreshTokens, tasks, users, verificationTokens };
-export type { TBoard, TTask, TUser };
+export { boards, nodes, refreshTokens, tasks, users, verificationTokens };
+export type { TBoard, TNode, TTask, TUser };

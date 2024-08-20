@@ -20,7 +20,7 @@ import { TextField, TextFieldInput, TextFieldLabel } from '~/components/ui/text-
 import { Toggle } from '~/components/ui/toggle';
 import { ONE_MONTH_IN_SECONDS } from '~/consts';
 import { db } from '~/db';
-import { refreshTokens, users, verificationTokens } from '~/db/schema';
+import { nodes, refreshTokens, users, verificationTokens } from '~/db/schema';
 import { resend } from '~/utils/resend.server';
 
 const signUp = action(async (formData: FormData) => {
@@ -43,8 +43,9 @@ const signUp = action(async (formData: FormData) => {
 			.returning({ token: verificationTokens.token });
 		if (!token) {
 			tx.rollback();
-			return;
+			return [null, null];
 		}
+		await tx.insert(nodes).values({ name: 'root', parentId: null, userId: user.id });
 		return [user, token];
 	});
 

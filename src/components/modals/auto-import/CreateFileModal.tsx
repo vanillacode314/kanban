@@ -1,22 +1,22 @@
 import { nanoid } from 'nanoid';
-import { Show, createSignal } from 'solid-js';
+import { createSignal } from 'solid-js';
 import { toast } from 'solid-sonner';
 import { Button } from '~/components/ui/button';
 import { TextField, TextFieldInput, TextFieldLabel } from '~/components/ui/text-field';
 import { useApp } from '~/context/app';
-import { createBoard } from '~/db/utils/boards';
+import { createNode } from '~/db/utils/nodes';
 import BaseModal from '../BaseModal';
 
-export const [createBoardModalOpen, setCreateBoardModalOpen] = createSignal<boolean>(false);
+export const [createFileModalOpen, setCreateFileModalOpen] = createSignal<boolean>(false);
 
-export default function CreateBoardModal() {
+export default function CreateFileModal() {
 	const [appContext, setAppContext] = useApp();
 
 	return (
-		<BaseModal title="Create Board" open={createBoardModalOpen()} setOpen={setCreateBoardModalOpen}>
+		<BaseModal title="Create File" open={createFileModalOpen()} setOpen={setCreateFileModalOpen}>
 			{(close) => (
 				<form
-					action={createBoard}
+					action={createNode}
 					method="post"
 					class="flex flex-col gap-4"
 					onSubmit={(event) => {
@@ -25,15 +25,16 @@ export default function CreateBoardModal() {
 						idInput.value = nanoid();
 					}}
 				>
+					<input type="hidden" name="parentPath" value={appContext.path} />
 					<input type="hidden" name="id" value={nanoid()} />
-					<input type="hidden" name="path" value={appContext.path} />
+					<input type="hidden" name="extension" value="project" />
 					<TextField class="grid w-full items-center gap-1.5">
-						<TextFieldLabel for="title">Title</TextFieldLabel>
+						<TextFieldLabel for="name">Name</TextFieldLabel>
 						<TextFieldInput
 							type="text"
-							id="title"
-							name="title"
-							placeholder="Title"
+							id="name"
+							name="name"
+							placeholder="Name"
 							autocomplete="off"
 						/>
 					</TextField>
@@ -42,7 +43,7 @@ export default function CreateBoardModal() {
 						class="self-end"
 						onClick={() => {
 							close();
-							toast.loading('Creating Board');
+							toast.loading('Creating File');
 						}}
 					>
 						Submit

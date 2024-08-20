@@ -4,9 +4,9 @@ import {
 	cookieStorageManagerSSR,
 	useColorMode
 } from '@kobalte/core/color-mode';
-import { RouteSectionProps, Router, useBeforeLeave } from '@solidjs/router';
+import { RouteSectionProps, Router, useBeforeLeave, useLocation } from '@solidjs/router';
 import { FileRoutes } from '@solidjs/start/router';
-import { For, JSXElement, Suspense, createEffect, onMount } from 'solid-js';
+import { For, JSXElement, Suspense, createEffect, createMemo, onMount } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { isServer } from 'solid-js/web';
 import { Toaster, toast } from 'solid-sonner';
@@ -31,6 +31,8 @@ function AutoImportModals() {
 }
 
 function RootLayout(props: RouteSectionProps) {
+	const location = useLocation();
+	const path = () => location.pathname;
 	const storageManager = cookieStorageManagerSSR(isServer ? getServerCookies() : document.cookie);
 	useBeforeLeave(() => toast.dismiss());
 
@@ -39,7 +41,7 @@ function RootLayout(props: RouteSectionProps) {
 			<Suspense>
 				<ColorModeScript storageType={storageManager.type} />
 				<ColorModeProvider storageManager={storageManager}>
-					<AppProvider>
+					<AppProvider path={path()}>
 						<ColoredToaster />
 						<div class="flex h-full flex-col overflow-hidden">
 							<Nav class="full-width content-grid" />

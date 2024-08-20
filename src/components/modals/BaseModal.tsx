@@ -71,15 +71,25 @@ export function Modal(props: Props) {
 					onToggle={(event) => {
 						mergedProps.setOpen(event.newState === 'open');
 					}}
+					class="h-full w-full bg-transparent"
 				>
-					<Card>
-						<CardHeader>
-							<CardTitle>{props.title}</CardTitle>
-						</CardHeader>
-						<CardContent>
-							<div>{props.children(() => mergedProps.setOpen(false))}</div>
-						</CardContent>
-					</Card>
+					<div
+						class="grid h-full w-full items-end sm:place-content-center"
+						onClick={(event) => {
+							if (event.target === event.currentTarget) {
+								mergedProps.setOpen(false);
+							}
+						}}
+					>
+						<Card class="w-full sm:min-w-96">
+							<CardHeader>
+								<CardTitle>{props.title}</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<div>{props.children(() => mergedProps.setOpen(false))}</div>
+							</CardContent>
+						</Card>
+					</div>
 				</dialog>
 			</Portal>
 		</>

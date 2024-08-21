@@ -34,7 +34,7 @@ import * as path from '~/utils/path';
 export const route = {
 	preload: () => {
 		const location = useLocation();
-		getNodes(location.pathname, { includeChildren: true });
+		getNodes(decodeURIComponent(location.pathname), { includeChildren: true });
 	},
 	matchFilters: {
 		folder: (value: string) => !value.includes('.')

@@ -32,7 +32,7 @@ function AutoImportModals() {
 
 const RootLayout = (props: RouteSectionProps) => {
 	const location = useLocation();
-	const path = () => location.pathname;
+	const path = () => decodeURIComponent(location.pathname);
 	const storageManager = cookieStorageManagerSSR(isServer ? getServerCookies() : document.cookie);
 	useBeforeLeave(() => toast.dismiss());
 

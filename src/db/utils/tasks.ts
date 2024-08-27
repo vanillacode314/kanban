@@ -74,7 +74,7 @@ const moveTask = async (taskId: TTask['id'], toBoardId: TBoard['id'], toIndex?: 
 			.select({ maxIndex: sql<number>`max(${tasks.index})` })
 			.from(tasks)
 			.where(and(eq(tasks.boardId, toBoardId), eq(tasks.userId, user.id)));
-		if (!task) toIndex = 0;
+		if (null === task.maxIndex) toIndex = 0;
 		else toIndex = task.maxIndex + 1;
 	}
 
@@ -139,7 +139,7 @@ const createTask = action(async (formData: FormData) => {
 			.select({ maxIndex: sql<number>`max(${tasks.index})` })
 			.from(tasks)
 			.where(and(eq(tasks.boardId, boardId), eq(tasks.userId, user.id)));
-		if (!task) index = 0;
+		if (null === task.maxIndex) index = 0;
 		else index = task.maxIndex + 1;
 	}
 	const task = await db

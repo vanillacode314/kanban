@@ -129,7 +129,7 @@ const createBoard = action(async (formData: FormData) => {
 			.select({ maxIndex: sql<number>`max(${boards.index})` })
 			.from(boards)
 			.where(and(eq(boards.userId, user.id), eq(boards.nodeId, node.id)));
-		if (!board) index = 0;
+		if (board.maxIndex === null) index = 0;
 		else index = board.maxIndex + 1;
 	}
 	const $board = await db
@@ -176,7 +176,13 @@ const deleteBoard = action(async (formData: FormData) => {
 		await tx
 			.update(boards)
 			.set({ index: sql`${boards.index} - 1` })
-			.where(and(eq(boards.userId, user.id), gt(boards.index, board.index)));
+			.where(
+				and(
+					eq(boards.userId, user.id),
+					gt(boards.index, board.index),
+					eq(boards.nodeId, board.nodeId)
+				)
+			);
 	});
 }, 'delete-board');
 

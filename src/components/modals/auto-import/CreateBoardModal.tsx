@@ -1,5 +1,6 @@
+import { useSubmissions } from '@solidjs/router';
 import { nanoid } from 'nanoid';
-import { Show, createSignal } from 'solid-js';
+import { Show, createEffect, createSignal } from 'solid-js';
 import { toast } from 'solid-sonner';
 import { Button } from '~/components/ui/button';
 import { TextField, TextFieldInput, TextFieldLabel } from '~/components/ui/text-field';
@@ -11,6 +12,7 @@ export const [createBoardModalOpen, setCreateBoardModalOpen] = createSignal<bool
 
 export default function CreateBoardModal() {
 	const [appContext, setAppContext] = useApp();
+	const submissions = useSubmissions(createBoard);
 
 	return (
 		<BaseModal title="Create Board" open={createBoardModalOpen()} setOpen={setCreateBoardModalOpen}>

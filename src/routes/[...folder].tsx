@@ -55,23 +55,25 @@ export default function Home() {
 
 	return (
 		<div class="flex h-full flex-col gap-4 overflow-hidden py-4">
-			<div class="flex justify-end gap-4">
-				<Button class="flex items-center gap-2" onClick={() => setCreateFileModalOpen(true)}>
-					<span class="i-heroicons:document-plus text-lg"></span>
-					<span>Create Project</span>
-				</Button>
-				<Button class="flex items-center gap-2" onClick={() => setCreateFolderModalOpen(true)}>
-					<span class="i-heroicons:plus text-lg"></span>
-					<span>Create Folder</span>
-				</Button>
-			</div>
+			<Show when={nodes().length > 0}>
+				<div class="flex justify-end gap-4">
+					<Button class="flex items-center gap-2" onClick={() => setCreateFileModalOpen(true)}>
+						<span class="i-heroicons:document-plus text-lg"></span>
+						<span>Create Project</span>
+					</Button>
+					<Button class="flex items-center gap-2" onClick={() => setCreateFolderModalOpen(true)}>
+						<span class="i-heroicons:plus text-lg"></span>
+						<span>Create Folder</span>
+					</Button>
+				</div>
+			</Show>
 			<PathCrumbs />
 			<Show
 				when={nodes().length > 0}
 				fallback={
 					<div class="grid h-full place-content-center place-items-center gap-4 font-medium">
 						<span>Empty Folder</span>
-						<div class="flex items-center justify-end gap-4">
+						<div class="flex flex-col items-center justify-end gap-4 sm:flex-row">
 							<Button class="flex items-center gap-2" onClick={() => setCreateFileModalOpen(true)}>
 								<span class="i-heroicons:document-plus text-lg"></span>
 								<span>Create Project</span>

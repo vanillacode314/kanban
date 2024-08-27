@@ -1,33 +1,23 @@
-import { useLocale } from '@kobalte/core';
 import { Key } from '@solid-primitives/keyed';
 import { A, createAsync, useAction, useLocation, useSubmissions } from '@solidjs/router';
-import { createSignal, JSXElement, Show } from 'solid-js';
+import { JSXElement, Show } from 'solid-js';
 import { toast } from 'solid-sonner';
 import { setCreateFileModalOpen } from '~/components/modals/auto-import/CreateFileModal';
 import { setCreateFolderModalOpen } from '~/components/modals/auto-import/CreateFolderModal';
 import { setRenameFileModalOpen } from '~/components/modals/auto-import/RenameFileModal';
 import { setRenameFolderModalOpen } from '~/components/modals/auto-import/RenameFolderModal';
+import PathCrumbs from '~/components/PathCrumbs';
 import { Button } from '~/components/ui/button';
 import {
 	ContextMenu,
-	ContextMenuCheckboxItem,
 	ContextMenuContent,
-	ContextMenuGroup,
-	ContextMenuGroupLabel,
 	ContextMenuItem,
 	ContextMenuPortal,
-	ContextMenuRadioGroup,
-	ContextMenuRadioItem,
-	ContextMenuSeparator,
 	ContextMenuShortcut,
-	ContextMenuSub,
-	ContextMenuSubContent,
-	ContextMenuSubTrigger,
 	ContextMenuTrigger
 } from '~/components/ui/context-menu';
 import { useApp } from '~/context/app';
 import { TNode } from '~/db/schema';
-import { getBoards } from '~/db/utils/boards';
 import { createNode, deleteNode, getNodes, isFolder } from '~/db/utils/nodes';
 import * as path from '~/utils/path';
 
@@ -42,7 +32,7 @@ export const route = {
 };
 
 export default function Home() {
-	const [appContext, setAppContext] = useApp();
+	const [appContext, _setAppContext] = useApp();
 	const serverNodes = createAsync(() => getNodes(appContext.path, { includeChildren: true }));
 	const submissions = useSubmissions(createNode);
 
@@ -75,6 +65,7 @@ export default function Home() {
 					<span>Create Folder</span>
 				</Button>
 			</div>
+			<PathCrumbs />
 			<Show
 				when={nodes().length > 0}
 				fallback={
@@ -110,7 +101,7 @@ export default function Home() {
 						</Button>
 					</Show>
 					<Key each={folders()} by="id">
-						{(node, index) => (
+						{(node) => (
 							<FolderContextMenu node={node()}>
 								<Button
 									variant="outline"
@@ -125,7 +116,7 @@ export default function Home() {
 						)}
 					</Key>
 					<Key each={files()} by="id">
-						{(node, index) => (
+						{(node) => (
 							<FileContextMenu node={node()}>
 								<Button
 									variant="outline"
@@ -146,7 +137,7 @@ export default function Home() {
 }
 
 function FolderContextMenu(props: { children: JSXElement; node: TNode }) {
-	const [appContext, setAppContext] = useApp();
+	const [_appContext, setAppContext] = useApp();
 	const $deleteNode = useAction(deleteNode);
 
 	return (
@@ -188,7 +179,7 @@ function FolderContextMenu(props: { children: JSXElement; node: TNode }) {
 }
 
 function FileContextMenu(props: { children: JSXElement; node: TNode }) {
-	const [appContext, setAppContext] = useApp();
+	const [_appContext, setAppContext] = useApp();
 	const $deleteNode = useAction(deleteNode);
 
 	return (

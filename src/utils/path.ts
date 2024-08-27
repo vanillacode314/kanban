@@ -21,4 +21,15 @@ function compressPath(path: string) {
 	return parts.map((p) => p.substring(0, 1)).join('/') + '/' + last;
 }
 
-export { compressPath, join };
+function splitIntoParts(path: string): Array<{ name: string; path: string }> {
+	const _parts = path.split('/').filter(Boolean);
+	let currentPath: string = '/';
+	const parts: Array<{ name: string; path: string }> = [];
+	for (const part of _parts) {
+		parts.push({ name: part, path: currentPath + part });
+		currentPath += part + '/';
+	}
+	return parts;
+}
+
+export { compressPath, join, splitIntoParts };

@@ -1,6 +1,7 @@
 import { Key } from '@solid-primitives/keyed';
 import { createAsync, useLocation, useSubmissions } from '@solidjs/router';
 import Board from '~/components/Board';
+import PathCrumbs from '~/components/PathCrumbs';
 import { setCreateBoardModalOpen } from '~/components/modals/auto-import/CreateBoardModal';
 import { Button } from '~/components/ui/button';
 import { useApp } from '~/context/app';
@@ -44,6 +45,7 @@ export default function Home() {
 					<span>Create Board</span>
 				</Button>
 			</div>
+			<PathCrumbs />
 			<div class="flex h-full snap-x snap-mandatory gap-[var(--gap)] overflow-auto [--cols:1] [--gap:theme(spacing.4)] sm:[--cols:2] md:[--cols:3]">
 				<Key each={boards()} by="id">
 					{(board, index) => (

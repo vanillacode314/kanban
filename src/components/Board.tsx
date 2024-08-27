@@ -58,10 +58,8 @@ export const Board: Component<{
 
 	return (
 		<Card
-			class={cn('group/board h-full overflow-hidden', props.class)}
-			onDragOver={(event) => {
-				event.preventDefault();
-			}}
+			class={cn('group/board flex h-full flex-col overflow-hidden', props.class)}
+			onDragOver={(event) => event.preventDefault()}
 			onDrop={async (event) => {
 				if (!event.dataTransfer) throw new Error('No data transfer');
 				const taskIdToMove = String(event.dataTransfer.getData('text/plain'));
@@ -99,7 +97,7 @@ export const Board: Component<{
 					</div>
 				</div>
 			</CardHeader>
-			<CardContent class="h-full overflow-hidden">
+			<CardContent class="overflow-hidden">
 				<AnimatedTaskList boardId={props.board.id} tasks={tasks()} />
 			</CardContent>
 		</Card>

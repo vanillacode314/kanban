@@ -74,7 +74,9 @@ export function ConfirmModal() {
 						>
 							No
 						</Button>
-						<Button type="submit">Yes</Button>
+						<Button autofocus type="submit">
+							Yes
+						</Button>
 					</div>
 				</form>
 			)}

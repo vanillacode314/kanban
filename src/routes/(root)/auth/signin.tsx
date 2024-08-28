@@ -142,6 +142,7 @@ export default function SignInPage() {
 					<TextField>
 						<TextFieldLabel for="email">Email</TextFieldLabel>
 						<TextFieldInput
+							autofocus
 							value={email()}
 							onInput={(e) => setEmail(e.currentTarget.value)}
 							id="email"

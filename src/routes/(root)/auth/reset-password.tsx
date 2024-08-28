@@ -191,6 +191,7 @@ export default function ResetPasswordPage() {
 						<TextField>
 							<TextFieldLabel for="email">Email</TextFieldLabel>
 							<TextFieldInput
+								autofocus
 								id="email"
 								type="email"
 								name="email"

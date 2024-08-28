@@ -32,6 +32,7 @@ export default function CreateTaskModal() {
 						<TextField class="grid w-full items-center gap-1.5">
 							<TextFieldLabel for="title">Title</TextFieldLabel>
 							<TextFieldInput
+								autofocus
 								type="text"
 								id="title"
 								name="title"

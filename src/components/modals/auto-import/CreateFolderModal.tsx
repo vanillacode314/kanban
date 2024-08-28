@@ -34,6 +34,7 @@ export default function CreateFolderModal() {
 					<TextField class="grid w-full items-center gap-1.5">
 						<TextFieldLabel for="name">Name</TextFieldLabel>
 						<TextFieldInput
+							autofocus
 							type="text"
 							id="name"
 							name="name"

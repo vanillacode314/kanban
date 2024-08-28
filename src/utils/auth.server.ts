@@ -8,11 +8,12 @@ import { db } from '~/db';
 import { TUser, refreshTokens, users, verificationTokens } from '~/db/schema';
 import { resend } from './resend.server';
 
-const getUser = cache(async (debug: string = '', shouldBeAuthenticated: boolean = true) => {
+const getUser = cache(async (debug: string = '', shouldBeAuthenticated: boolean | null = true) => {
 	'use server';
 
 	const event = getRequestEvent()!;
 	const user = await parseUser(event.nativeEvent);
+	if (shouldBeAuthenticated === null) return user;
 	if (!user && shouldBeAuthenticated) return redirect('/auth/signin');
 	if (user && !shouldBeAuthenticated) return redirect('/');
 	return user;

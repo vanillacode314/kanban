@@ -13,15 +13,8 @@ const getUser = cache(async (debug: string = '', shouldBeAuthenticated: boolean 
 
 	const event = getRequestEvent()!;
 	const user = await parseUser(event.nativeEvent);
-	console.log({ debug, shouldBeAuthenticated, user: !!user });
-	if (!user && shouldBeAuthenticated) {
-		console.log('redirected to auth');
-		return redirect('/auth/signin');
-	}
-	if (user && !shouldBeAuthenticated) {
-		console.log('redirected to app');
-		return redirect('/');
-	}
+	if (!user && shouldBeAuthenticated) return redirect('/auth/signin');
+	if (user && !shouldBeAuthenticated) return redirect('/');
 	return user;
 }, 'get-user');
 

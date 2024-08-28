@@ -4,10 +4,17 @@ import {
 	cookieStorageManagerSSR,
 	useColorMode
 } from '@kobalte/core/color-mode';
+import { createConnectivitySignal, makeConnectivityListener } from '@solid-primitives/connectivity';
 import { MetaProvider, Title } from '@solidjs/meta';
-import { RouteSectionProps, Router, useBeforeLeave, useLocation } from '@solidjs/router';
+import {
+	RouteSectionProps,
+	Router,
+	useBeforeLeave,
+	useLocation,
+	useNavigate
+} from '@solidjs/router';
 import { FileRoutes } from '@solidjs/start/router';
-import { For, JSXElement, Suspense } from 'solid-js';
+import { For, JSXElement, Suspense, createEffect } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import { Toaster, toast } from 'solid-sonner';
 import { getCookie } from 'vinxi/http';
@@ -36,6 +43,9 @@ const RootLayout = (props: RouteSectionProps) => {
 	const path = () => decodeURIComponent(location.pathname);
 	const storageManager = cookieStorageManagerSSR(isServer ? getServerCookies() : document.cookie);
 	useBeforeLeave(() => toast.dismiss());
+	const navigate = useNavigate();
+	const isOnline = createConnectivitySignal();
+	createEffect(() => !isOnline() && navigate('/offline'));
 
 	return (
 		<>

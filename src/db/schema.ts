@@ -26,6 +26,19 @@ const verificationTokens = sqliteTable('verificationTokens', {
 		.$defaultFn(() => new Date(Date.now() + 600000))
 });
 
+const forgotPasswordTokens = sqliteTable('forgotPasswordTokens', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => nanoid()),
+	userId: text('userId')
+		.notNull()
+		.references(() => users.id, { onDelete: 'cascade' }),
+	token: text('token').notNull(),
+	expiresAt: integer('expiresAt', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date(Date.now() + 600000))
+});
+
 const users = sqliteTable('users', {
 	id: text('id')
 		.primaryKey()
@@ -122,5 +135,5 @@ type TTask = InferSelectModel<typeof tasks>;
 type TUser = InferSelectModel<typeof users>;
 type TNode = InferSelectModel<typeof nodes>;
 
-export { boards, nodes, refreshTokens, tasks, users, verificationTokens };
+export { boards, forgotPasswordTokens, nodes, refreshTokens, tasks, users, verificationTokens };
 export type { TBoard, TNode, TTask, TUser };

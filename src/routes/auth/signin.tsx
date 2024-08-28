@@ -1,4 +1,4 @@
-import { A, action, redirect, useSubmission } from '@solidjs/router';
+import { A, action, redirect, useNavigate, useSubmission } from '@solidjs/router';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
@@ -6,6 +6,7 @@ import { Show, createEffect, createSignal, untrack } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { toast } from 'solid-sonner';
 import { setCookie } from 'vinxi/http';
+import { z } from 'zod';
 import { Button } from '~/components/ui/button';
 import {
 	Card,
@@ -68,6 +69,8 @@ const signIn = action(async (formData: FormData) => {
 export default function SignInPage() {
 	const [passwordVisible, setPasswordVisible] = createSignal<boolean>(false);
 	const submission = useSubmission(signIn);
+	const [email, setEmail] = createSignal('');
+	const navigate = useNavigate();
 
 	let toastId: string | number | undefined;
 	createEffect(() => {
@@ -107,6 +110,8 @@ export default function SignInPage() {
 						<TextField>
 							<TextFieldLabel for="email">Email</TextFieldLabel>
 							<TextFieldInput
+								value={email()}
+								onInput={(e) => setEmail(e.currentTarget.value)}
 								id="email"
 								type="email"
 								name="email"
@@ -120,7 +125,17 @@ export default function SignInPage() {
 						<TextField>
 							<div class="flex items-center justify-between gap-2">
 								<TextFieldLabel for="password">Password</TextFieldLabel>
-								<Button as={A} href="" variant="link">
+								<Button
+									onClick={() => {
+										try {
+											const $email = z.string().email().parse(email());
+											navigate('/auth/forgot-password?email=' + $email);
+										} catch {
+											toast.error('Invalid email', { id: toastId, duration: 3000 });
+										}
+									}}
+									variant="link"
+								>
 									Forgot Password?
 								</Button>
 							</div>

@@ -4,6 +4,7 @@ import {
 	cookieStorageManagerSSR,
 	useColorMode
 } from '@kobalte/core/color-mode';
+import { MetaProvider, Title } from '@solidjs/meta';
 import { RouteSectionProps, Router, useBeforeLeave, useLocation } from '@solidjs/router';
 import { FileRoutes } from '@solidjs/start/router';
 import { For, JSXElement, Suspense } from 'solid-js';
@@ -41,6 +42,7 @@ const RootLayout = (props: RouteSectionProps) => {
 			<ColorModeScript storageType={storageManager.type} />
 			<ColorModeProvider storageManager={storageManager}>
 				<AppProvider path={path()}>
+					<Title>JustKanban</Title>
 					<ColoredToaster />
 					<div class="flex h-full flex-col overflow-hidden">
 						<Nav class="full-width content-grid" />
@@ -59,7 +61,9 @@ export default function App() {
 			singleFlight={false}
 			root={(props) => (
 				<Suspense>
-					<RootLayout {...props} />
+					<MetaProvider>
+						<RootLayout {...props} />
+					</MetaProvider>
 				</Suspense>
 			)}
 		>

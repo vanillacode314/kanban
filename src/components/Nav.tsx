@@ -36,7 +36,7 @@ export default function Nav(props: { class?: string }) {
 		<nav class={cn('border-offset-background border-b bg-background py-4', props.class)}>
 			<div class="flex items-center gap-4">
 				<a href="/">
-					<p class="font-bold uppercase tracking-wide">Vanilla Kanban</p>
+					<p class="font-bold uppercase tracking-wide">JustKanban</p>
 				</a>
 				<span class="grow" />
 				<Show when={user()}>

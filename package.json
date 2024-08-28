@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
-    "build": "vinxi build",
+    "build": "npm run build:solid && npm run build:sw",
+    "build:solid": "SERVER_PRESET=netlify vinxi build",
+    "build:sw": "node ./workbox.js",
     "start": "vinxi start",
     "format": "prettier --write ."
   },
@@ -57,6 +59,7 @@
     "prettier": "^3.3.3",
     "prettier-plugin-organize-imports": "^4.0.0",
     "prettier-plugin-tailwindcss": "^0.6.6",
-    "unocss": "^0.62.3"
+    "unocss": "^0.62.3",
+    "workbox-build": "^7.1.1"
   }
 }

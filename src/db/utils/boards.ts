@@ -1,4 +1,4 @@
-import { action, cache } from '@solidjs/router';
+import { action, cache, redirect } from '@solidjs/router';
 import { and, asc, eq, gt, gte, lt, lte, sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { getRequestEvent } from 'solid-js/web';
@@ -11,7 +11,7 @@ const getBoards = cache(async (path: string) => {
 
 	const event = getRequestEvent()!;
 	const user = event.locals.user;
-	if (!user) throw new Error('Unauthorized');
+	if (!user) return redirect('/auth/signin');
 
 	const { node } = await getNodes(path);
 

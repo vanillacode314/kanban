@@ -1,5 +1,5 @@
 import { useColorMode } from '@kobalte/core/color-mode';
-import { action, redirect, useLocation } from '@solidjs/router';
+import { A, action, redirect, useLocation } from '@solidjs/router';
 import { RequestEventLocals } from '@solidjs/start/server';
 import { eq } from 'drizzle-orm';
 import { Show, createResource, createSignal } from 'solid-js';
@@ -35,9 +35,9 @@ export default function Nav(props: { class?: string }) {
 	return (
 		<nav class={cn('border-offset-background border-b bg-background py-4', props.class)}>
 			<div class="flex items-center gap-4">
-				<a href="/">
+				<A href="/">
 					<p class="font-bold uppercase tracking-wide">JustKanban</p>
-				</a>
+				</A>
 				<span class="grow" />
 				<Show when={user()}>
 					<form action={signOut} method="post">

@@ -117,9 +117,9 @@ const createBoard = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const title = String(formData.get('title'));
-	const id = String(formData.get('id') ?? nanoid());
-	const path = String(formData.get('path'));
+	const title = String(formData.get('title')).trim();
+	const id = String(formData.get('id') ?? nanoid()).trim();
+	const path = String(formData.get('path')).trim();
 
 	const { node } = await getNodes(path);
 
@@ -147,8 +147,8 @@ const updateBoard = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const id = String(formData.get('id'));
-	const title = String(formData.get('title'));
+	const id = String(formData.get('id')).trim();
+	const title = String(formData.get('title')).trim();
 	const $board = await db
 		.update(boards)
 		.set({ title: title })
@@ -165,7 +165,7 @@ const deleteBoard = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const boardId = String(formData.get('id'));
+	const boardId = String(formData.get('id')).trim();
 
 	await db.transaction(async (tx) => {
 		const [board] = await tx

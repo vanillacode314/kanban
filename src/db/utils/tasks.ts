@@ -129,9 +129,9 @@ const createTask = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const title = String(formData.get('title'));
-	const boardId = String(formData.get('boardId'));
-	const id = String(formData.get('id') ?? nanoid());
+	const title = String(formData.get('title')).trim();
+	const boardId = String(formData.get('boardId')).trim();
+	const id = String(formData.get('id') ?? nanoid()).trim();
 
 	let index;
 	{
@@ -156,8 +156,8 @@ const updateTask = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const id = String(formData.get('id'));
-	const title = String(formData.get('title'));
+	const id = String(formData.get('id')).trim();
+	const title = String(formData.get('title')).trim();
 
 	const $task = await db
 		.update(tasks)
@@ -174,7 +174,7 @@ const deleteTask = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const taskId = String(formData.get('id'));
+	const taskId = String(formData.get('id')).trim();
 	await db.transaction(async (tx) => {
 		const [task] = await tx
 			.delete(tasks)

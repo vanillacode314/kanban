@@ -29,14 +29,14 @@ const createNode = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const name = String(formData.get('name'));
+	const name = String(formData.get('name')).trim();
 	if (!name) throw new Error('name is required');
-	const parentPath = String(formData.get('parentPath'));
+	const parentPath = String(formData.get('parentPath')).trim();
 	if (!parentPath) throw new Error('parentPath is required');
 	if (!parentPath.startsWith('/')) throw new Error('parentPath must start with /');
 	const extension = formData.get('extension');
 
-	const id = String(formData.get('id') ?? nanoid());
+	const id = String(formData.get('id') ?? nanoid()).trim();
 
 	const [parentNode] = (await db.all(
 		sql.raw(GET_NODES_BY_PATH_QUERY(parentPath, user.id))
@@ -46,7 +46,7 @@ const createNode = action(async (formData: FormData) => {
 		.values({
 			id,
 			parentId: parentNode.id,
-			name: extension ? name + '.' + String(extension) : name,
+			name: extension ? name + '.' + String(extension).trim() : name,
 			userId: user.id
 		})
 		.returning();
@@ -61,15 +61,15 @@ const updateNode = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const id = String(formData.get('id'));
-	const name = String(formData.get('name'));
-	const parentId = String(formData.get('parentId'));
+	const id = String(formData.get('id')).trim();
+	const name = String(formData.get('name')).trim();
+	const parentId = String(formData.get('parentId')).trim();
 	const extension = formData.get('extension');
 
 	const $node = await db
 		.update(nodes)
 		.set({
-			name: extension ? name + '.' + String(extension) : name,
+			name: extension ? name + '.' + String(extension).trim() : name,
 			parentId
 		})
 		.where(and(eq(nodes.id, id), eq(nodes.userId, user.id)))
@@ -85,7 +85,7 @@ const deleteNode = action(async (formData: FormData) => {
 	const user = event.locals.user;
 	if (!user) return new Error('Unauthorized');
 
-	const nodeId = String(formData.get('id'));
+	const nodeId = String(formData.get('id')).trim();
 
 	await db
 		.delete(nodes)

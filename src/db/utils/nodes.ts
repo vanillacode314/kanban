@@ -4,13 +4,14 @@ import { nanoid } from 'nanoid';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '~/db';
 import { type TBoard, type TTask, boards, nodes, tasks, TNode } from '~/db/schema';
+import { getUser } from '~/utils/auth.server';
 
 const getNodes = cache(
 	async (path: string, { includeChildren = false }: Partial<{ includeChildren: boolean }> = {}) => {
 		'use server';
 
 		const event = getRequestEvent()!;
-		const user = event.locals.user;
+		const user = await getUser();
 		if (!user) return redirect('/auth/signin');
 
 		const query = GET_NODES_BY_PATH_QUERY(path, user.id, includeChildren);
@@ -26,7 +27,7 @@ const createNode = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const name = String(formData.get('name')).trim();
@@ -58,7 +59,7 @@ const updateNode = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const id = String(formData.get('id')).trim();
@@ -82,7 +83,7 @@ const deleteNode = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const nodeId = String(formData.get('id')).trim();

@@ -1,4 +1,4 @@
-import { A, action, redirect, useSubmission } from '@solidjs/router';
+import { A, Navigate, action, createAsync, redirect, useSubmission } from '@solidjs/router';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
@@ -25,6 +25,7 @@ import { ONE_MONTH_IN_SECONDS } from '~/consts';
 import { passwordSchema } from '~/consts/zod';
 import { db } from '~/db';
 import { nodes, refreshTokens, users, verificationTokens } from '~/db/schema';
+import { getUser } from '~/utils/auth.server';
 import { resend } from '~/utils/resend.server';
 
 const signUpSchema = z

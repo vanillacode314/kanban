@@ -4,14 +4,13 @@ import { nanoid } from 'nanoid';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '~/db';
 import { type TBoard, type TTask, boards, tasks } from '~/db/schema';
+import { getUser } from '~/utils/auth.server';
 import { getNodes } from './nodes';
 
 const getBoards = cache(async (path: string) => {
 	'use server';
 
-	const event = getRequestEvent()!;
-	const user = event.locals.user;
-	if (!user) return redirect('/auth/signin');
+	const user = await getUser()!;
 
 	const { node } = await getNodes(path);
 
@@ -40,7 +39,7 @@ const moveBoard = async (boardId: TBoard['id'], toIndex: TBoard['index']) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) throw new Error('Unauthorized');
 
 	const [board] = await db
@@ -77,7 +76,7 @@ const shiftBoard = async (boardId: TBoard['id'], direction: 1 | -1) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) throw new Error('Unauthorized');
 
 	const [board] = await db
@@ -114,7 +113,7 @@ const createBoard = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const title = String(formData.get('title')).trim();
@@ -144,7 +143,7 @@ const updateBoard = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const id = String(formData.get('id')).trim();
@@ -162,7 +161,7 @@ const deleteBoard = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const boardId = String(formData.get('id')).trim();

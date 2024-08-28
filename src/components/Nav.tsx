@@ -2,7 +2,7 @@ import { useColorMode } from '@kobalte/core/color-mode';
 import { A, action, redirect, useLocation } from '@solidjs/router';
 import { RequestEventLocals } from '@solidjs/start/server';
 import { eq } from 'drizzle-orm';
-import { Show, createResource, createSignal } from 'solid-js';
+import { Show, Suspense, createResource, createSignal } from 'solid-js';
 import { getRequestEvent } from 'solid-js/web';
 import { deleteCookie, getCookie } from 'vinxi/http';
 import { Alert, AlertDescription, AlertTitle } from '~/components/ui/alert';
@@ -39,14 +39,16 @@ export default function Nav(props: { class?: string }) {
 					<p class="font-bold uppercase tracking-wide">JustKanban</p>
 				</A>
 				<span class="grow" />
-				<Show when={user()}>
-					<form action={signOut} method="post">
-						<Button type="submit" class="flex items-center gap-2" variant="outline">
-							<span>Sign Out</span>
-							<span class="i-heroicons:arrow-right-end-on-rectangle text-xl"></span>
-						</Button>
-					</form>
-				</Show>
+				<Suspense>
+					<Show when={user()}>
+						<form action={signOut} method="post">
+							<Button type="submit" class="flex items-center gap-2" variant="outline">
+								<span>Sign Out</span>
+								<span class="i-heroicons:arrow-right-end-on-rectangle text-xl"></span>
+							</Button>
+						</form>
+					</Show>
+				</Suspense>
 				<Button onClick={() => toggleColorMode()} variant="outline" size="icon">
 					<div class="i-heroicons:sun rotate-0 scale-100 text-xl transition-all dark:-rotate-90 dark:scale-0" />
 					<div class="i-heroicons:moon absolute rotate-90 scale-0 text-xl transition-all dark:rotate-0 dark:scale-100" />

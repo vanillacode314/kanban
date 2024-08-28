@@ -1,4 +1,12 @@
-import { A, action, redirect, useNavigate, useSubmission } from '@solidjs/router';
+import {
+	A,
+	Navigate,
+	action,
+	createAsync,
+	redirect,
+	useNavigate,
+	useSubmission
+} from '@solidjs/router';
 import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
@@ -23,6 +31,7 @@ import { Toggle } from '~/components/ui/toggle';
 import { ONE_MONTH_IN_SECONDS } from '~/consts';
 import { db } from '~/db';
 import { refreshTokens, users } from '~/db/schema';
+import { getUser } from '~/utils/auth.server';
 
 const signInSchema = z.object({
 	email: z.string().email(),

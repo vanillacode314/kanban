@@ -4,11 +4,12 @@ import { nanoid } from 'nanoid';
 import { getRequestEvent } from 'solid-js/web';
 import { db } from '~/db';
 import { type TBoard, type TTask, tasks } from '~/db/schema';
+import { getUser } from '~/utils/auth.server';
 
 const moveTask = async (taskId: TTask['id'], toBoardId: TBoard['id'], toIndex?: TTask['index']) => {
 	'use server';
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) throw new Error('Unauthorized');
 
 	const [task] = await db
@@ -89,7 +90,7 @@ const shiftTask = async (taskId: TTask['id'], direction: 1 | -1) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) throw new Error('Unauthorized');
 
 	const [task] = await db
@@ -126,7 +127,7 @@ const createTask = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const title = String(formData.get('title')).trim();
@@ -153,7 +154,7 @@ const updateTask = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const id = String(formData.get('id')).trim();
@@ -171,7 +172,7 @@ const deleteTask = action(async (formData: FormData) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	const user = event.locals.user;
+	const user = await getUser();
 	if (!user) return new Error('Unauthorized');
 
 	const taskId = String(formData.get('id')).trim();

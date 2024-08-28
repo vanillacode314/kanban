@@ -5,6 +5,7 @@ import { getRequestEvent } from 'solid-js/web';
 import { z } from 'zod';
 import { db } from '~/db';
 import { forgotPasswordTokens, users } from '~/db/schema';
+import { getUser } from '~/utils/auth.server';
 import { resend } from '~/utils/resend.server';
 
 const sendResetPasswordEmail = async (email: string) => {
@@ -42,7 +43,7 @@ If you did not request a password resset, you can safely ignore this email.`,
 	});
 };
 
-export default function SignInPage() {
+export default function ForgotPasswordPage() {
 	const navigate = useNavigate();
 	const [searchParams, _setSearchParams] = useSearchParams();
 	const email = () => searchParams.email;

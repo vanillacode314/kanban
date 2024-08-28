@@ -1,17 +1,76 @@
-import { reload } from '@solidjs/router';
+import { cache, redirect, reload } from '@solidjs/router';
 import { eq } from 'drizzle-orm';
+import jwt from 'jsonwebtoken';
 import { nanoid } from 'nanoid';
 import { getRequestEvent } from 'solid-js/web';
-import { deleteCookie } from 'vinxi/http';
+import { H3Event, deleteCookie, getCookie, setCookie } from 'vinxi/http';
 import { db } from '~/db';
-import { verificationTokens } from '~/db/schema';
+import { TUser, refreshTokens, users, verificationTokens } from '~/db/schema';
 import { resend } from './resend.server';
 
-async function getUser() {
+const getUser = cache(async (debug: string = '', shouldBeAuthenticated: boolean = true) => {
 	'use server';
 
 	const event = getRequestEvent()!;
-	return event.locals.user;
+	const user = await parseUser(event.nativeEvent);
+	console.log({ debug, shouldBeAuthenticated, user: !!user });
+	if (!user && shouldBeAuthenticated) {
+		console.log('redirected to auth');
+		return redirect('/auth/signin');
+	}
+	if (user && !shouldBeAuthenticated) {
+		console.log('redirected to app');
+		return redirect('/');
+	}
+	return user;
+}, 'get-user');
+
+async function parseUser(event: H3Event) {
+	'use server';
+	const accessToken = getCookie(event, 'accessToken');
+
+	try {
+		if (accessToken) {
+			return jwt.verify(accessToken, process.env.AUTH_SECRET!) as Omit<TUser, 'passwordHash'>;
+		} else {
+			return parseRefreshAccessToken(event);
+		}
+	} catch (err) {
+		return parseRefreshAccessToken(event);
+	}
+}
+
+async function parseRefreshAccessToken(event: H3Event) {
+	'use server';
+	const refreshToken = getCookie(event, 'refreshToken');
+	if (!refreshToken) return null;
+
+	let data: string | jwt.JwtPayload;
+	try {
+		data = jwt.verify(refreshToken, process.env.AUTH_SECRET!);
+	} catch {
+		return null;
+	}
+	if (!data) return null;
+	const [user] = await db
+		.select({ id: refreshTokens.userId })
+		.from(refreshTokens)
+		.where(eq(refreshTokens.token, refreshToken));
+	if (!user) return null;
+	const [$user] = await db.select().from(users).where(eq(users.id, user.id));
+	if (!$user) {
+		return null;
+	}
+	const accessToken = jwt.sign({ ...$user, passwordHash: undefined }, process.env.AUTH_SECRET!, {
+		expiresIn: '1h'
+	});
+	setCookie(event, 'accessToken', accessToken, {
+		httpOnly: true,
+		secure: true,
+		path: '/',
+		maxAge: 3600
+	});
+	return $user;
 }
 
 async function refreshAccessToken() {

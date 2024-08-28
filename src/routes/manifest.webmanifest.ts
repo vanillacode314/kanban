@@ -1,6 +1,6 @@
 export function GET() {
 	return {
-		$schema: 'https://json.schemastore.org/web-manifest-combined.json',
+		id: 'com.raqueeb.kanban',
 		short_name: 'justkanban',
 		name: 'justkanban',
 		start_url: '/',

@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
-    "build": "npm run build:solid",
+    "build": "npm run build:solid && npm run build:sw",
     "build:solid": "vinxi build",
     "build:sw": "node ./workbox.js",
     "start": "vinxi start",

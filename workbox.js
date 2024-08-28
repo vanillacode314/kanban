@@ -2,10 +2,12 @@ import { generateSW } from 'workbox-build';
 
 generateSW({
 	globPatterns: ['**/*.{js,css,html}'],
-	swDest: 'dist/public/sw.js',
-	globDirectory: 'dist/public',
+	swDest: 'dist/sw.js',
+	globDirectory: 'dist',
+	globIgnores: ['_server/**'],
 	skipWaiting: true,
-	sourcemap: false
+	sourcemap: false,
+	inlineWorkboxRuntime: true
 }).then(({ count, size, warnings }) => {
 	if (warnings.length > 0) {
 		console.warn('Warnings encountered while generating a service worker:', warnings.join('\n'));

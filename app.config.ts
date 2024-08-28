@@ -1,7 +1,6 @@
 import { defineConfig } from '@solidjs/start/config';
 import { presetIcons, presetWebFonts } from 'unocss';
 import Unocss from 'unocss/vite';
-import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
 	server: {

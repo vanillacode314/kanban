@@ -7,6 +7,7 @@ generateSW({
 	globDirectory: 'dist',
 	globIgnores: ['_server/**'],
 	skipWaiting: true,
+	clientsClaim: true,
 	sourcemap: false,
 	inlineWorkboxRuntime: true,
 	navigationPreload: true,

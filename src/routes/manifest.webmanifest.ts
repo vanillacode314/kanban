@@ -8,6 +8,15 @@ export function GET() {
 		display: 'standalone',
 		scope: '/',
 		theme_color: '#000000',
+		handle_links: 'preferred',
+		orientation: 'natural',
+		edge_side_panel: {
+			preferred_width: 400
+		},
+		categories: ['productivity', 'utility', 'tasks'],
+		dir: 'ltr',
+		prefer_related_applications: false,
+		lang: 'en-US',
 		icons: [
 			{
 				src: 'pwa-192x192.png',

@@ -6,13 +6,8 @@ import manifestJson from './manifest';
 
 export default defineConfig({
 	server: {
-		output: {
-			dir: 'dist',
-			serverDir: 'dist/server',
-			publicDir: 'dist/public'
-		},
 		prerender: {
-			routes: ['/public/offline']
+			routes: ['/offline']
 		}
 	},
 	vite: {

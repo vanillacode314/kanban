@@ -19,12 +19,6 @@ export function GET() {
 		lang: 'en-US',
 		icons: [
 			{
-				src: 'maskable-icon-512x512.png',
-				sizes: '512x512',
-				type: 'image/png',
-				purpose: 'maskable'
-			},
-			{
 				src: 'pwa-64x64.png',
 				sizes: '64x64',
 				type: 'image/png',
@@ -41,6 +35,12 @@ export function GET() {
 				sizes: '512x512',
 				type: 'image/png',
 				purpose: 'any'
+			},
+			{
+				src: 'maskable-icon-512x512.png',
+				sizes: '512x512',
+				type: 'image/png',
+				purpose: 'maskable'
 			}
 		],
 		description: 'Manage projects using kanban boards'

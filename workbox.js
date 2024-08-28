@@ -16,7 +16,7 @@ generateSW({
 			handler: 'NetworkOnly',
 			options: {
 				precacheFallback: {
-					fallbackURL: '/offline'
+					fallbackURL: '/offline/index.html'
 				}
 			}
 		}

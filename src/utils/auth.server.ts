@@ -8,7 +8,7 @@ import { db } from '~/db';
 import { TUser, refreshTokens, users, verificationTokens } from '~/db/schema';
 import { resend } from './resend.server';
 
-const getUser = cache(async (debug: string = '', shouldBeAuthenticated: boolean | null = true) => {
+const getUser = cache(async (shouldBeAuthenticated: boolean | null = true) => {
 	'use server';
 
 	const event = getRequestEvent()!;

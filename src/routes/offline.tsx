@@ -1,5 +1,3 @@
-import Nav from '~/components/Nav';
-
 export default function OfflinePage() {
 	return (
 		<div class="grid place-content-center place-items-center">

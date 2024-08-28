@@ -23,6 +23,7 @@ import { forgotPasswordTokens, refreshTokens, users } from '~/db/schema';
 
 import { createStore } from 'solid-js/store';
 import { z } from 'zod';
+import ValidationErrors from '~/components/form/ValidationErrors';
 import { passwordSchema } from '~/consts/zod';
 
 const resetPasswordSchema = z
@@ -32,9 +33,7 @@ const resetPasswordSchema = z
 		confirmPassword: z.string(),
 		token: z.string({ required_error: 'Token is required' })
 	})
-	.refine((data) => data.password === data.confirmPassword, {
-		message: 'Passwords do not match'
-	});
+	.refine((data) => data.password === data.confirmPassword, 'Passwords do not match');
 const resetPassword = action(async (formData: FormData) => {
 	'use server';
 	const result = resetPasswordSchema.safeParse(Object.fromEntries(formData));
@@ -178,13 +177,7 @@ export default function SignInPage() {
 					</CardHeader>
 					<CardContent class="grid gap-4">
 						<input type="hidden" name="token" value={token()} />
-						<Show when={formErrors.length > 0}>
-							<div class="flex flex-col">
-								<For each={formErrors}>
-									{(error) => <span class="text-sm text-error-foreground">{error}</span>}
-								</For>
-							</div>
-						</Show>
+						<ValidationErrors errors={formErrors} />
 						<TextField>
 							<TextFieldLabel for="email">Email</TextFieldLabel>
 							<TextFieldInput
@@ -196,13 +189,7 @@ export default function SignInPage() {
 								autocomplete="username"
 							/>
 						</TextField>
-						<Show when={emailErrors.length > 0}>
-							<div class="flex flex-col">
-								<For each={emailErrors}>
-									{(error) => <span class="text-sm text-error-foreground">{error}</span>}
-								</For>
-							</div>
-						</Show>
+						<ValidationErrors errors={emailErrors} />
 						<TextField>
 							<TextFieldLabel for="password">New Password</TextFieldLabel>
 							<div class="flex gap-2">
@@ -228,13 +215,7 @@ export default function SignInPage() {
 								</Toggle>
 							</div>
 						</TextField>
-						<Show when={passwordErrors.length > 0}>
-							<div class="flex flex-col">
-								<For each={passwordErrors}>
-									{(error) => <span class="text-sm text-error-foreground">{error}</span>}
-								</For>
-							</div>
-						</Show>
+						<ValidationErrors errors={passwordErrors} />
 						<TextField>
 							<TextFieldLabel for="confirm-password">Confirm Password</TextFieldLabel>
 							<TextFieldInput

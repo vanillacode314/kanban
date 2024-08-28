@@ -4,9 +4,12 @@ import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { nanoid } from 'nanoid';
 import { Show, createEffect, createSignal, untrack } from 'solid-js';
+import { createStore } from 'solid-js/store';
 import { getRequestEvent } from 'solid-js/web';
 import { toast } from 'solid-sonner';
 import { setCookie } from 'vinxi/http';
+import { z } from 'zod';
+import ValidationErrors from '~/components/form/ValidationErrors';
 import { Button } from '~/components/ui/button';
 import {
 	Card,
@@ -19,20 +22,41 @@ import {
 import { TextField, TextFieldInput, TextFieldLabel } from '~/components/ui/text-field';
 import { Toggle } from '~/components/ui/toggle';
 import { ONE_MONTH_IN_SECONDS } from '~/consts';
+import { passwordSchema } from '~/consts/zod';
 import { db } from '~/db';
 import { nodes, refreshTokens, users, verificationTokens } from '~/db/schema';
 import { resend } from '~/utils/resend.server';
 
+const signUpSchema = z
+	.object({
+		email: z.string().email(),
+		password: passwordSchema,
+		confirmPassword: z.string()
+	})
+	.refine((data) => data.password === data.confirmPassword, 'Passwords do not match');
 const signUp = action(async (formData: FormData) => {
 	'use server';
-	const email = String(formData.get('email'));
-	const password = String(formData.get('password'));
+	const result = signUpSchema.safeParse(Object.fromEntries(formData));
+	if (!result.success) {
+		return new Error(
+			result.error.errors
+				.map((error) => `${error.path[0] ?? 'form'};;${error.message}`)
+				.join(';;;'),
+			{
+				cause: 'VALIDATION_ERROR'
+			}
+		);
+	}
+	const { email, password } = result.data;
 
 	const passwordHash = await bcrypt.hash(password, 10);
 
 	{
 		const [user] = await db.select().from(users).where(eq(users.email, email));
-		if (user) return new Error('Email already exists', { cause: 'EMAIL_ALREADY_EXISTS' });
+		if (user)
+			return new Error('form;;Email already registered. Sign In instead.', {
+				cause: 'VALIDATION_ERROR'
+			});
 	}
 
 	const [user, verificationToken] = await db.transaction(async (tx) => {
@@ -100,11 +124,17 @@ If you did not sign up, please ignore this email.`,
 export default function SignUpPage() {
 	const [passwordVisible, setPasswordVisible] = createSignal<boolean>(false);
 	const submission = useSubmission(signUp);
+	const [emailErrors, setEmailErrors] = createStore<string[]>([]);
+	const [passwordErrors, setPasswordErrors] = createStore<string[]>([]);
+	const [formErrors, setFormErrors] = createStore<string[]>([]);
 
 	let toastId: string | number | undefined;
 	createEffect(() => {
 		const { result, pending } = submission;
 		return untrack(() => {
+			setEmailErrors([]);
+			setPasswordErrors([]);
+			setFormErrors([]);
 			if (pending) {
 				if (toastId) toast.dismiss(toastId);
 				toastId = toast.loading('Creating account...', { duration: Number.POSITIVE_INFINITY });
@@ -113,8 +143,16 @@ export default function SignUpPage() {
 			if (!result) return;
 			if (result instanceof Error) {
 				switch (result.cause) {
-					case 'EMAIL_ALREADY_EXISTS':
-						toast.error(result.message, { id: toastId, duration: 3000 });
+					case 'VALIDATION_ERROR':
+						const validationMap = new Map<string, string[]>();
+						for (const message of result.message.split(';;;')) {
+							const [path, error] = message.split(';;');
+							validationMap.set(path, [...(validationMap.get(path) ?? []), error]);
+						}
+						setEmailErrors(validationMap.get('email') ?? []);
+						setPasswordErrors(validationMap.get('password') ?? []);
+						setFormErrors(validationMap.get('form') ?? []);
+						toast.error('Invalid Data', { id: toastId, duration: 3000 });
 						break;
 					default:
 						console.error(result);
@@ -134,46 +172,52 @@ export default function SignUpPage() {
 					<CardDescription>Enter your details below to create an account.</CardDescription>
 				</CardHeader>
 				<CardContent class="grid gap-4">
-					<div class="grid gap-2">
-						<TextField>
-							<TextFieldLabel for="email">Email</TextFieldLabel>
+					<ValidationErrors errors={formErrors} />
+					<TextField>
+						<TextFieldLabel for="email">Email</TextFieldLabel>
+						<TextFieldInput
+							id="email"
+							type="email"
+							name="email"
+							placeholder="m@example.com"
+							required
+							autocomplete="username"
+						/>
+					</TextField>
+					<ValidationErrors errors={emailErrors} />
+					<TextField>
+						<TextFieldLabel for="password">Password</TextFieldLabel>
+						<div class="flex gap-2">
 							<TextFieldInput
-								id="email"
-								type="email"
-								name="email"
-								placeholder="m@example.com"
+								name="password"
+								id="password"
+								type={passwordVisible() ? 'text' : 'password'}
 								required
-								autocomplete="username"
+								autocomplete="current-password"
 							/>
-						</TextField>
-					</div>
-					<div class="grid gap-2">
-						<TextField>
-							<TextFieldLabel for="password">Password</TextFieldLabel>
-							<div class="flex gap-2">
-								<TextFieldInput
-									name="password"
-									id="password"
-									type={passwordVisible() ? 'text' : 'password'}
-									required
-									autocomplete="current-password"
-								/>
-								<Toggle
-									aria-label="toggle password"
-									onChange={(value) => setPasswordVisible(value)}
-								>
-									{(state) => (
-										<Show
-											when={state.pressed()}
-											fallback={<span class="i-heroicons:eye-slash text-lg"></span>}
-										>
-											<span class="i-heroicons:eye-solid text-lg"></span>
-										</Show>
-									)}
-								</Toggle>
-							</div>
-						</TextField>
-					</div>
+							<Toggle aria-label="toggle password" onChange={(value) => setPasswordVisible(value)}>
+								{(state) => (
+									<Show
+										when={state.pressed()}
+										fallback={<span class="i-heroicons:eye-slash text-lg"></span>}
+									>
+										<span class="i-heroicons:eye-solid text-lg"></span>
+									</Show>
+								)}
+							</Toggle>
+						</div>
+					</TextField>
+					<ValidationErrors errors={passwordErrors} />
+					<TextField>
+						<TextFieldLabel for="confirm-password">Confirm Password</TextFieldLabel>
+						<TextFieldInput
+							name="confirmPassword"
+							id="confirm-password"
+							type={passwordVisible() ? 'text' : 'password'}
+							required
+							autocomplete="current-password"
+						/>
+					</TextField>
 				</CardContent>
 				<CardFooter class="grid gap-4 sm:grid-cols-2">
 					<Button type="submit" class="w-full">

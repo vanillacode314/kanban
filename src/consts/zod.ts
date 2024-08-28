@@ -1,6 +1,7 @@
 import { z } from 'zod';
 const passwordSchema = z
 	.string({ required_error: 'Password is required' })
+	.trim()
 	.min(3, 'Password must be at least 3 characters')
 	.regex(/(?=.*[0-9])/, 'Password must contain a number')
 	.regex(/(?=.*[a-z])/, 'Password must contain a lowercase letter')

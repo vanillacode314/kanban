@@ -63,7 +63,10 @@ const resetPassword = action(async (formData: FormData) => {
 
 	const passwordHash = await bcrypt.hash(password, 10);
 
-	await db.update(users).set({ passwordHash }).where(eq(users.email, email)).returning();
+	await db.transaction(async (tx) => {
+		await tx.update(users).set({ passwordHash }).where(eq(users.email, email)).returning();
+		await tx.delete(forgotPasswordTokens).where(eq(forgotPasswordTokens.userId, user.id));
+	});
 
 	const accessToken = jwt.sign({ ...user, passwordHash: undefined }, process.env.AUTH_SECRET!, {
 		expiresIn: '1h'

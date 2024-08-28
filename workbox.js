@@ -1,7 +1,7 @@
 import { generateSW } from 'workbox-build';
 
 generateSW({
-	globPatterns: ['**/*.{js,css,html,ico,png}'],
+	globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
 	additionalManifestEntries: ['manifest.webmanifest'],
 	swDest: 'dist/sw.js',
 	globDirectory: 'dist',

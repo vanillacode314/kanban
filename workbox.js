@@ -7,7 +7,19 @@ generateSW({
 	globIgnores: ['_server/**'],
 	skipWaiting: true,
 	sourcemap: false,
-	inlineWorkboxRuntime: true
+	inlineWorkboxRuntime: true,
+	navigationPreload: true,
+	runtimeCaching: [
+		{
+			urlPattern: ({ request }) => request.mode === 'navigate',
+			handler: 'NetworkOnly',
+			options: {
+				precacheFallback: {
+					fallbackURL: '/offline'
+				}
+			}
+		}
+	]
 }).then(({ count, size, warnings }) => {
 	if (warnings.length > 0) {
 		console.warn('Warnings encountered while generating a service worker:', warnings.join('\n'));
